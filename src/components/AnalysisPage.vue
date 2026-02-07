@@ -88,7 +88,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
+import { useWindowResize, useClickOutside } from '../composables/useEventListener'
 import VChart from "vue-echarts"
 import { useECharts, useNiceInterval } from '../composables/useECharts'
 import { formatGrowth, formatPremium, formatAxisValue } from '../utils/formatters'
@@ -106,21 +107,9 @@ useECharts()
 const listContainer = ref(null)
 const focusItemRefs = ref({})
 
-// 响应式移动端检测
-const isMobile = ref(window.innerWidth <= 768)
-const updateMobile = () => {
-    isMobile.value = window.innerWidth <= 768
-}
-
-onMounted(() => {
-    window.addEventListener('resize', updateMobile)
-    document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-    window.removeEventListener('resize', updateMobile)
-    document.removeEventListener('click', handleClickOutside)
-})
+// 使用组合式函数优化事件监听
+const isMobile = useWindowResize()
+useClickOutside(searchContainer, handleClickOutside)
 
 // Company selection dropdown
 const dropdownVisible = ref(false)
@@ -346,10 +335,8 @@ const chartOption = computed(() => {
                     itemStyle: {
                         color: '#4338CA'
                     }
-                },
-                animationDelay: function(idx) {
-                    return idx * 100
                 }
+                // 移除 animationDelay 提升性能
             }
         ],
         animationEasing: 'cubicOut',

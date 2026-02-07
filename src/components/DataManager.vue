@@ -100,6 +100,7 @@
 import { ref, nextTick } from 'vue'
 import { NButton, NCard, NTag, NText, NInput, NEmpty, NIcon } from 'naive-ui'
 import { ArrowBackOutline } from '@vicons/ionicons5'
+import { formatDate } from '../utils/formatters'
 import { dataSets, currentDataSetId, loadDataSet, deleteDataSetFromServer, renameDataSet, uploadFile, state } from '../stores/dataStore'
 
 const emit = defineEmits(['back'])
@@ -168,12 +169,8 @@ async function deleteDataSet(dataSetId) {
     }
 }
 
-function formatDate(dateString) {
-    const date = new Date(dateString)
-    return date.toLocaleString('zh-CN', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit'
-    })
+function formatDatasetDate(dateString) {
+    return formatDate(dateString)
 }
 </script>
 

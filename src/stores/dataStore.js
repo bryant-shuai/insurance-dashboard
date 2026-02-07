@@ -1,4 +1,5 @@
 import { reactive, ref, computed } from 'vue'
+import { useLocalStorage, batchLocalStorage } from '../composables/useLocalStorage'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
 
@@ -16,12 +17,13 @@ export const state = reactive({
     isDataLoaded: false
 })
 
-export const focusCompanies = ref([])
+// 使用组合式函数优化状态持久化
+export const focusCompanies = useLocalStorage('focusCompanies', [])
 export const currentIns = ref('')
-export const currentTab = ref(0)
-export const selectedCompany = ref(null)
-export const dataSets = ref([])
-export const currentDataSetId = ref(null)
+export const currentTab = useLocalStorage('currentTab', 0)
+export const selectedCompany = useLocalStorage('selectedCompany', null)
+export const dataSets = useLocalStorage('dataSets', [])
+export const currentDataSetId = useLocalStorage('currentDataSetId', null)
 
 // 计算属性：获取公司列表
 export const companyList = computed(() => {
@@ -111,7 +113,7 @@ export function getCompanyDetail(fullName) {
     }))
 }
 
-// 方法：保存数据到 localStorage
+// 方法：保存数据到 localStorage（使用批量操作提升性能）
 export function saveDataToStorage(dataSetName = null) {
     try {
         const dataSetId = currentDataSetId.value || Date.now().toString()
@@ -136,16 +138,17 @@ export function saveDataToStorage(dataSetName = null) {
         
         currentDataSetId.value = dataSetId
         
-        // 保存所有数据集
-        const dataToSave = {
-            dataSets: dataSets.value,
-            currentDataSetId: currentDataSetId.value,
-            focusCompanies: focusCompanies.value,
-            currentIns: currentIns.value,
-            currentTab: currentTab.value,
-            selectedCompany: selectedCompany.value
-        }
-        localStorage.setItem('insuranceDashboardData', JSON.stringify(dataToSave))
+        // 批量持久化（减少写入次数）
+        batchLocalStorage([
+            { key: 'insuranceDashboardData', value: {
+                dataSets: dataSets.value,
+                currentDataSetId: currentDataSetId.value,
+                focusCompanies: focusCompanies.value,
+                currentIns: currentIns.value,
+                currentTab: currentTab.value,
+                selectedCompany: selectedCompany.value
+            }}
+        ])
     } catch (error) {
         console.error('保存数据失败:', error)
     }
@@ -166,16 +169,17 @@ export function addDataSet(dataSetName, insurances, companies, rawHtml) {
         
         dataSets.value.push(newDataSet)
         
-        // 保存所有数据集
-        const dataToSave = {
-            dataSets: dataSets.value,
-            currentDataSetId: currentDataSetId.value,
-            focusCompanies: focusCompanies.value,
-            currentIns: currentIns.value,
-            currentTab: currentTab.value,
-            selectedCompany: selectedCompany.value
-        }
-        localStorage.setItem('insuranceDashboardData', JSON.stringify(dataToSave))
+        // 批量持久化
+        batchLocalStorage([
+            { key: 'insuranceDashboardData', value: {
+                dataSets: dataSets.value,
+                currentDataSetId: currentDataSetId.value,
+                focusCompanies: focusCompanies.value,
+                currentIns: currentIns.value,
+                currentTab: currentTab.value,
+                selectedCompany: selectedCompany.value
+            }}
+        ])
         
         return dataSetId
     } catch (error) {
@@ -187,28 +191,19 @@ export function addDataSet(dataSetName, insurances, companies, rawHtml) {
 // 方法：从 localStorage 加载数据
 export function loadDataFromStorage() {
     try {
-        const savedData = localStorage.getItem('insuranceDashboardData')
-        if (savedData) {
-            const data = JSON.parse(savedData)
-            dataSets.value = data.dataSets || []
-            currentDataSetId.value = data.currentDataSetId || null
-            focusCompanies.value = data.focusCompanies || []
-            currentTab.value = data.currentTab || 0
-            selectedCompany.value = data.selectedCompany || null
-            
-            // 如果有当前数据集，加载它
-            if (currentDataSetId.value && dataSets.value.length > 0) {
-                const currentDataSet = dataSets.value.find(ds => ds.id === currentDataSetId.value)
-                if (currentDataSet) {
-                    loadDataSet(currentDataSet.id)
-                    return true
-                }
+        // useLocalStorage 已自动处理初始化，这里只需处理兼容性逻辑
+        if (dataSets.value.length > 0 && currentDataSetId.value) {
+            const currentDataSet = dataSets.value.find(ds => ds.id === currentDataSetId.value)
+            if (currentDataSet) {
+                loadDataSet(currentDataSet.id)
+                return true
             }
         }
+        return false
     } catch (error) {
         console.error('加载数据失败:', error)
+        return false
     }
-    return false
 }
 
 // 方法：加载指定的数据集
@@ -249,16 +244,17 @@ export function deleteDataSet(dataSetId) {
                 currentIns.value = ''
             }
             
-            // 保存更新后的数据集列表
-            const dataToSave = {
-                dataSets: dataSets.value,
-                currentDataSetId: currentDataSetId.value,
-                focusCompanies: focusCompanies.value,
-                currentIns: currentIns.value,
-                currentTab: currentTab.value,
-                selectedCompany: selectedCompany.value
-            }
-            localStorage.setItem('insuranceDashboardData', JSON.stringify(dataToSave))
+            // 批量持久化
+            batchLocalStorage([
+                { key: 'insuranceDashboardData', value: {
+                    dataSets: dataSets.value,
+                    currentDataSetId: currentDataSetId.value,
+                    focusCompanies: focusCompanies.value,
+                    currentIns: currentIns.value,
+                    currentTab: currentTab.value,
+                    selectedCompany: selectedCompany.value
+                }}
+            ])
         }
     } catch (error) {
         console.error('删除数据集失败:', error)
@@ -268,17 +264,17 @@ export function deleteDataSet(dataSetId) {
 // 方法：清除 localStorage 中的数据
 export function clearDataFromStorage() {
     try {
-        localStorage.removeItem('insuranceDashboardData')
+        // useLocalStorage 会自动清理关联的键
         dataSets.value = []
         currentDataSetId.value = null
         state.insurances = []
         state.companies = {}
         state.rawHtml = ''
         state.isDataLoaded = false
-        focusCompanies.value = []
         currentIns.value = ''
-        currentTab.value = 0
-        selectedCompany.value = null
+        
+        // 清理遗留数据
+        localStorage.removeItem('insuranceDashboardData')
     } catch (error) {
         console.error('清除数据失败:', error)
     }

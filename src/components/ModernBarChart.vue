@@ -59,6 +59,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
+import { formatMainValue, formatGrowth, formatYAxisValue } from '../utils/formatters'
 import { focusCompanies } from '../stores/dataStore'
 
 const props = defineProps({
@@ -135,33 +136,15 @@ function isFocusCompany(name) {
 }
 
 function formatMainValue(item) {
-    const value = props.mainType === 'premium' ? item.p : item.g
-    if (props.mainType === 'premium') {
-        if (value >= 1000000) {
-            return `¥${(value / 1000000).toFixed(1)}M`
-        } else if (value >= 1000) {
-            return `¥${(value / 1000).toFixed(1)}K`
-        }
-        return `¥${Math.round(value)}`
-    } else {
-        return item.g >= 0 ? `+${item.g.toFixed(1)}%` : `${item.g.toFixed(1)}%`
-    }
+    return formatMainValue(item, props.mainType)
 }
 
 function formatGrowth(growth) {
-    return growth >= 0 ? `+${growth.toFixed(1)}%` : `${growth.toFixed(1)}%`
+    return formatGrowth(growth)
 }
 
 function formatYAxisValue(value) {
-    if (props.mainType === 'premium') {
-        if (value >= 1000000) {
-            return `¥${(value / 1000000).toFixed(1)}M`
-        } else if (value >= 1000) {
-            return `¥${(value / 1000).toFixed(1)}K`
-        }
-        return `¥${Math.round(value)}`
-    }
-    return value.toFixed(1)
+    return formatYAxisValue(value, props.mainType)
 }
 
 function handleBarClick(item) {

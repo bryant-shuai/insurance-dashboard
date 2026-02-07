@@ -23,7 +23,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, shallowRef, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, shallowRef } from 'vue'
+import { useWindowResize } from '../composables/useEventListener'
 import VChart from "vue-echarts"
 import { useECharts, useNiceInterval } from '../composables/useECharts'
 import { formatGrowth, formatPremium, formatAxisValue } from '../utils/formatters'
@@ -41,19 +42,8 @@ const props = defineProps({
 
 const loading = ref(false)
 
-// 响应式移动端检测
-const isMobile = ref(window.innerWidth <= 768)
-const updateMobile = () => {
-    isMobile.value = window.innerWidth <= 768
-}
-
-onMounted(() => {
-    window.addEventListener('resize', updateMobile)
-})
-
-onUnmounted(() => {
-    window.removeEventListener('resize', updateMobile)
-})
+// 使用组合式函数优化事件监听
+const isMobile = useWindowResize()
 
 // 钱袋子路径
 const MONEY_BAG_PATH = 'path://M27.5,12.5c0-1.7,0.7-3.1,1.9-4.2c1.2-1.1,2.8-1.7,4.6-1.7c1.7,0,3.3,0.6,4.5,1.7c1.2,1.1,1.9,2.5,1.9,4.2c0,1.4-0.5,2.7-1.4,3.7c1.7,1,3.2,2.4,4.2,4.1c1.2,1.8,1.9,4,1.9,6.5c0,3.1-1.1,5.8-3.1,7.9c-2,2.1-4.8,3.2-8,3.2c-3.2,0-6-1.1-8-3.2c-2.1-2.1-3.1-4.8-3.1-7.9c0-2.5,0.7-4.7,1.9-6.5c1.1-1.7,2.5-3.1,4.2-4.1C28,15.2,27.5,13.9,27.5,12.5z M34,10.5c-0.8,0-1.6,0.3-2.1,0.8c-0.6,0.5-0.9,1.2-0.9,2c0,0.8,0.3,1.5,0.9,2c0.6,0.5,1.3,0.8,2.1,0.8c0.8,0,1.5-0.3,2.1-0.8c0.6-0.5,0.9-1.2,0.9-2c0-0.8-0.3-1.5-0.9-2C35.5,10.8,34.8,10.5,34,10.5z M34,31.5c2.2,0,4.1-0.8,5.4-2.1c1.4-1.3,2.1-3.2,2.1-5.4c0-2.2-0.7-4.1-2.1-5.4c-1.4-1.3-3.2-2.1-5.4-2.1c-2.2,0-4.1,0.8-5.4,2.1c-1.4,1.3-2.1,3.2-2.1,5.4c0,2.2,0.7,4.1,2.1,5.4C29.9,30.7,31.8,31.5,34,31.5z'
@@ -244,10 +234,8 @@ const chartOption = computed(() => {
                     itemStyle: {
                         opacity: 1
                     }
-                },
-                animationDelay: function(idx) {
-                    return idx * 100
                 }
+                // 移除 animationDelay 提升性能
             }
         ],
         animationEasing: 'cubicOut',
