@@ -106,6 +106,22 @@ useECharts()
 const listContainer = ref(null)
 const focusItemRefs = ref({})
 
+// 响应式移动端检测
+const isMobile = ref(window.innerWidth <= 768)
+const updateMobile = () => {
+    isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+    window.addEventListener('resize', updateMobile)
+    document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateMobile)
+    document.removeEventListener('click', handleClickOutside)
+})
+
 // Company selection dropdown
 const dropdownVisible = ref(false)
 const searchKeyword = ref('')
@@ -149,14 +165,6 @@ function handleClickOutside(event) {
     }
 }
 
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside)
-})
-
 const chartOption = computed(() => {
     if (!selectedCompany.value) return {}
     
@@ -166,8 +174,7 @@ const chartOption = computed(() => {
     
     const { interval, max: newMax } = useNiceInterval(mainData)
     
-    // 检测是否为移动端
-    const isMobile = window.innerWidth <= 768
+    const isMobileVal = isMobile.value
     
     return {
         tooltip: {
@@ -199,13 +206,13 @@ const chartOption = computed(() => {
             }
         },
         grid: {
-            left: isMobile ? 5 : '3%',
-            right: isMobile ? '25%' : '4%',
-            bottom: isMobile ? '5%' : '8%',
-            top: isMobile ? '10%' : '18%',
+            left: isMobileVal ? 10 : '3%',
+            right: isMobileVal ? 40 : '4%',
+            bottom: isMobileVal ? 10 : '8%',
+            top: isMobileVal ? 30 : '18%',
             containLabel: true
         },
-        xAxis: isMobile ? {
+        xAxis: isMobileVal ? {
             type: 'value',
             name: '保费',
             nameLocation: 'end',
@@ -255,7 +262,7 @@ const chartOption = computed(() => {
                 show: false
             }
         },
-        yAxis: isMobile ? {
+        yAxis: isMobileVal ? {
             type: 'category',
             data: labels,
             inverse: true,
@@ -309,31 +316,31 @@ const chartOption = computed(() => {
                 name: '保费',
                 type: 'bar',
                 data: mainData,
-                barWidth: isMobile ? '35%' : '50%',
-                barCategoryGap: isMobile ? '40%' : '20%',
+                barWidth: isMobileVal ? '35%' : '50%',
+                barCategoryGap: isMobileVal ? '40%' : '20%',
                 itemStyle: {
-                    borderRadius: isMobile ? [0, 4, 4, 0] : [8, 8, 0, 0],
+                    borderRadius: isMobileVal ? [0, 4, 4, 0] : [8, 8, 0, 0],
                     color: '#4F46E5'
                 },
                 label: {
                     show: true,
-                    position: isMobile ? 'right' : 'top',
+                    position: isMobileVal ? 'right' : 'top',
                     formatter: function(params) {
                         const idx = params.dataIndex
                         const item = chartData[idx]
                         const premium = formatPremium(item.p)
                         const growth = formatGrowth(item.g)
-                        if (isMobile) {
+                        if (isMobileVal) {
                             return `${premium}  ${growth}`
                         }
                         return `${premium}\n${growth}`
                     },
                     color: '#374151',
-                    fontSize: isMobile ? 10 : 11,
+                    fontSize: isMobileVal ? 10 : 11,
                     fontWeight: '600',
                     fontFamily: 'Inter',
-                    lineHeight: isMobile ? 14 : 15,
-                    offset: isMobile ? [8, 0] : [0, 0]
+                    lineHeight: isMobileVal ? 14 : 15,
+                    offset: isMobileVal ? [10, 0] : [0, 0]
                 },
                 emphasis: {
                     itemStyle: {

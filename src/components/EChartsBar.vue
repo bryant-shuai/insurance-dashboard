@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, shallowRef } from 'vue'
+import { ref, computed, watch, shallowRef, onMounted, onUnmounted } from 'vue'
 import VChart from "vue-echarts"
 import { useECharts, useNiceInterval } from '../composables/useECharts'
 import { formatGrowth, formatPremium, formatAxisValue } from '../utils/formatters'
@@ -41,6 +41,23 @@ const props = defineProps({
 
 const loading = ref(false)
 
+// 响应式移动端检测
+const isMobile = ref(window.innerWidth <= 768)
+const updateMobile = () => {
+    isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+    window.addEventListener('resize', updateMobile)
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', updateMobile)
+})
+
+// 钱袋子路径
+const MONEY_BAG_PATH = 'path://M27.5,12.5c0-1.7,0.7-3.1,1.9-4.2c1.2-1.1,2.8-1.7,4.6-1.7c1.7,0,3.3,0.6,4.5,1.7c1.2,1.1,1.9,2.5,1.9,4.2c0,1.4-0.5,2.7-1.4,3.7c1.7,1,3.2,2.4,4.2,4.1c1.2,1.8,1.9,4,1.9,6.5c0,3.1-1.1,5.8-3.1,7.9c-2,2.1-4.8,3.2-8,3.2c-3.2,0-6-1.1-8-3.2c-2.1-2.1-3.1-4.8-3.1-7.9c0-2.5,0.7-4.7,1.9-6.5c1.1-1.7,2.5-3.1,4.2-4.1C28,15.2,27.5,13.9,27.5,12.5z M34,10.5c-0.8,0-1.6,0.3-2.1,0.8c-0.6,0.5-0.9,1.2-0.9,2c0,0.8,0.3,1.5,0.9,2c0.6,0.5,1.3,0.8,2.1,0.8c0.8,0,1.5-0.3,2.1-0.8c0.6-0.5,0.9-1.2,0.9-2c0-0.8-0.3-1.5-0.9-2C35.5,10.8,34.8,10.5,34,10.5z M34,31.5c2.2,0,4.1-0.8,5.4-2.1c1.4-1.3,2.1-3.2,2.1-5.4c0-2.2-0.7-4.1-2.1-5.4c-1.4-1.3-3.2-2.1-5.4-2.1c-2.2,0-4.1,0.8-5.4,2.1c-1.4,1.3-2.1,3.2-2.1,5.4c0,2.2,0.7,4.1,2.1,5.4C29.9,30.7,31.8,31.5,34,31.5z'
+
 const sortedData = computed(() => {
     return [...props.data].sort((a, b) => {
         const valueA = props.mainType === 'premium' ? a.p : a.g
@@ -56,8 +73,8 @@ const chartOption = computed(() => {
     
     const { interval, max: newMax } = useNiceInterval(mainData)
     
-    // 检测是否为移动端
-    const isMobile = window.innerWidth <= 768
+    const isMobileVal = isMobile.value
+    const isHorizontal = isMobileVal
     
     // Generate colors based on focus companies
     const colors = data.map(d => {
@@ -95,13 +112,13 @@ const chartOption = computed(() => {
             }
         },
         grid: {
-            left: isMobile ? 5 : '3%',
-            right: isMobile ? '25%' : '4%',
-            bottom: isMobile ? '5%' : '10%',
-            top: isMobile ? '15%' : '18%',
+            left: 10,
+            right: isHorizontal ? 60 : 20,
+            bottom: isHorizontal ? 10 : 40,
+            top: isHorizontal ? 20 : 60,
             containLabel: true
         },
-        xAxis: isMobile ? {
+        xAxis: isHorizontal ? {
             type: 'value',
             name: props.mainType === 'premium' ? '保费' : '增速',
             nameLocation: 'end',
@@ -114,22 +131,15 @@ const chartOption = computed(() => {
             },
             max: newMax,
             interval: interval,
-            axisLine: {
-                show: false
-            },
-            axisTick: {
-                show: false
-            },
+            axisLine: { show: false },
+            axisTick: { show: false },
             axisLabel: {
                 color: '#6B7280',
                 fontSize: 9,
                 fontFamily: 'Inter',
                 formatter: function(value) {
-                    if (props.mainType === 'premium') {
-                        return formatAxisValue(value)
-                    } else {
-                        return Math.round(value)
-                    }
+                    if (props.mainType === 'premium') return formatAxisValue(value)
+                    return Math.round(value)
                 }
             },
             splitLine: {
@@ -141,11 +151,7 @@ const chartOption = computed(() => {
         } : {
             type: 'category',
             data: labels,
-            axisLine: {
-                lineStyle: {
-                    color: 'rgba(156, 163, 175, 0.2)'
-                }
-            },
+            axisLine: { lineStyle: { color: 'rgba(156, 163, 175, 0.2)' } },
             axisLabel: {
                 color: '#4B5563',
                 fontSize: 11,
@@ -154,29 +160,21 @@ const chartOption = computed(() => {
                 fontFamily: 'Inter',
                 interval: 0
             },
-            axisTick: {
-                show: false
-            }
+            axisTick: { show: false }
         },
-        yAxis: isMobile ? {
+        yAxis: isHorizontal ? {
             type: 'category',
             data: labels,
             inverse: true,
-            axisLine: {
-                show: false
-            },
-            axisTick: {
-                show: false
-            },
+            axisLine: { show: false },
+            axisTick: { show: false },
             axisLabel: {
                 color: '#4B5563',
                 fontSize: 11,
                 fontWeight: 500,
                 fontFamily: 'Inter',
                 formatter: function(value) {
-                    if (value.length > 5) {
-                        return value.substring(0, 5) + '..'
-                    }
+                    if (value.length > 6) return value.substring(0, 6) + '..'
                     return value
                 }
             }
@@ -189,27 +187,19 @@ const chartOption = computed(() => {
                 color: '#6B7280',
                 fontSize: 11,
                 fontWeight: 400,
-                fontFamily: 'Inter',
-                padding: [0, 0, 0, 0]
+                fontFamily: 'Inter'
             },
             max: newMax,
             interval: interval,
-            axisLine: {
-                show: false
-            },
-            axisTick: {
-                show: false
-            },
+            axisLine: { show: false },
+            axisTick: { show: false },
             axisLabel: {
                 color: '#6B7280',
                 fontSize: 10,
                 fontFamily: 'Inter',
                 formatter: function(value) {
-                    if (props.mainType === 'premium') {
-                        return formatAxisValue(value)
-                    } else {
-                        return Math.round(value)
-                    }
+                    if (props.mainType === 'premium') return formatAxisValue(value)
+                    return Math.round(value)
                 }
             },
             splitLine: {
@@ -224,31 +214,31 @@ const chartOption = computed(() => {
                 name: props.mainType === 'premium' ? '保费' : '增速',
                 type: 'bar',
                 data: mainData,
-                barWidth: isMobile ? '35%' : '45%',
-                barCategoryGap: isMobile ? '40%' : '20%',
+                barWidth: isHorizontal ? '35%' : '45%',
+                barCategoryGap: isMobileVal ? '40%' : '20%',
                 itemStyle: {
-                    borderRadius: isMobile ? [0, 4, 4, 0] : [8, 8, 0, 0],
+                    borderRadius: isHorizontal ? [0, 4, 4, 0] : [8, 8, 0, 0],
                     opacity: 0.9
                 },
                 label: {
                     show: true,
-                    position: isMobile ? 'right' : 'top',
+                    position: isHorizontal ? 'right' : 'top',
                     formatter: function(params) {
                         const idx = params.dataIndex
                         const item = data[idx]
                         const premium = formatPremium(item.p)
                         const growth = formatGrowth(item.g)
-                        if (isMobile) {
+                        if (isHorizontal) {
                             return `${premium}  ${growth}`
                         }
                         return `${premium}\n${growth}`
                     },
                     color: '#374151',
-                    fontSize: isMobile ? 10 : 11,
+                    fontSize: isHorizontal ? 10 : 11,
                     fontWeight: '600',
                     fontFamily: 'Inter',
                     lineHeight: 14,
-                    offset: isMobile ? [8, 0] : [0, 0]
+                    offset: isHorizontal ? [10, 0] : [0, 0]
                 },
                 emphasis: {
                     itemStyle: {
