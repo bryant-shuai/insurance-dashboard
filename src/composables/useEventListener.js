@@ -23,7 +23,7 @@ export function useEventListener(target, event, handler, options) {
  * @returns {import('vue').Ref<boolean>} isMobile 响应式移动端检测
  */
 export function useWindowResize(callback) {
-    const isMobile = Vue.ref(window.innerWidth <= 768)
+    const isMobile = ref(window.innerWidth <= 768)
     
     const handleResize = () => {
         const width = window.innerWidth

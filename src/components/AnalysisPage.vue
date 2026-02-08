@@ -109,12 +109,13 @@ const focusItemRefs = ref({})
 
 // 使用组合式函数优化事件监听
 const isMobile = useWindowResize()
-useClickOutside(searchContainer, handleClickOutside)
 
 // Company selection dropdown
 const dropdownVisible = ref(false)
 const searchKeyword = ref('')
 const searchContainer = ref(null)
+
+useClickOutside(searchContainer, handleClickOutside)
 
 const filteredCompanies = computed(() => {
     if (!searchKeyword.value) return companyList.value
