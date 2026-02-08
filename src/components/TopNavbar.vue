@@ -21,7 +21,7 @@
             </button>
         </div>
         <div class="nav-actions">
-            <n-button type="primary" @click="$emit('switchData')" size="medium" class="manage-btn enhanced-button">
+            <n-button type="primary" @click="$emit('switchData')" size="medium" class="manage-btn enhanced-button coordinated-button">
                 <template #icon>
                     <n-icon><SettingsOutline /></n-icon>
                 </template>
