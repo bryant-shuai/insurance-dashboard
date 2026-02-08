@@ -21,7 +21,7 @@
             </button>
         </div>
         <div class="nav-actions">
-            <n-button type="primary" @click="$emit('switchData')" size="medium" class="manage-btn">
+            <n-button type="primary" @click="$emit('switchData')" size="medium" class="manage-btn enhanced-button">
                 <template #icon>
                     <n-icon><SettingsOutline /></n-icon>
                 </template>
@@ -111,6 +111,16 @@ function onTabClick(idx) {
     .manage-btn {
         width: 100%;
         justify-content: center;
+    }
+
+    .enhanced-button {
+        box-shadow: 0 2px 6px rgba(30, 64, 175, 0.25);
+        border: 2px solid var(--primary);
+    }
+
+    .enhanced-button:hover {
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.35);
+        transform: translateY(-1px);
     }
 
     .btn-text {

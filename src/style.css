@@ -261,6 +261,31 @@ h1, h2, h3, h4, h5, h6 {
     outline-offset: 2px;
 }
 
+/* 增强按钮对比度和可访问性 */
+.btn-primary-enhanced {
+    background: var(--primary);
+    color: white;
+    border: 2px solid var(--primary);
+    padding: 10px 20px;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 200ms ease;
+    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+}
+
+.btn-primary-enhanced:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-primary-enhanced:focus-visible {
+    outline: 3px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
 /* ===== Control Panel ===== */
 .control-panel {
     background: var(--bg-card);
