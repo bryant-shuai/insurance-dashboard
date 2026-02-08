@@ -11,13 +11,47 @@
                     <span>滚动查看完整数据表</span>
                 </div>
             </div>
-            <div class="table-box" v-html="state.rawHtml"></div>
+            <div class="table-box" v-html="filteredHtml"></div>
         </div>
     </div>
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { state } from '../stores/dataStore'
+
+// 过滤掉"地区"列的 HTML
+const filteredHtml = computed(() => {
+    if (!state.rawHtml) return ''
+    
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(state.rawHtml, 'text/html')
+    const table = doc.querySelector('table')
+    
+    if (!table) return state.rawHtml
+    
+    // 查找"地区"列的索引 - 从第二行查找（第一行是标题，第二行是表头）
+    const rows = table.querySelectorAll('tr')
+    if (rows.length < 2) return state.rawHtml
+    
+    const headerRow = rows[1] // 第二行是表头行
+    const cells = Array.from(headerRow.querySelectorAll('td'))
+    const regionColIndex = cells.findIndex(cell => 
+        cell.textContent.trim() === '地区' || 
+        cell.textContent.trim().includes('地区')
+    )
+    
+    if (regionColIndex === -1) return state.rawHtml
+    
+    // 删除所有行的该列（从第二行开始，保留标题行）
+    for (let i = 1; i < rows.length; i++) {
+        const cell = rows[i].querySelectorAll('td')[regionColIndex]
+        if (cell) cell.remove()
+    }
+    
+    return table.outerHTML
+})
+
 </script>
 
 <style scoped>
@@ -26,6 +60,8 @@ import { state } from '../stores/dataStore'
     display: flex;
     flex-direction: column;
     gap: clamp(12px, 1.5vw, 20px);
+    overflow: hidden;
+    min-height: 0;
 }
 
 .chart-card {
@@ -36,9 +72,11 @@ import { state } from '../stores/dataStore'
     border: 1px solid rgba(229, 231, 235, 0.8);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
 }
 
 .chart-card:hover {
