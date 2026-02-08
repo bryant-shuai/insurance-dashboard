@@ -3,13 +3,11 @@
         <div class="chart-grid">
             <EChartsBar 
                 title="保费规模 TOP10 (万元)"
-                icon="💰"
                 :data="rankingData.byPremium"
                 mainType="premium"
             />
             <EChartsBar 
                 title="增长速度 TOP10 (%)"
-                icon="🚀"
                 :data="rankingData.byGrowth"
                 mainType="growth"
             />

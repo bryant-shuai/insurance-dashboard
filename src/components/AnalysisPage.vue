@@ -3,7 +3,7 @@
         <div class="chart-card" style="height: 100%;">
             <div class="chart-header">
                 <div class="chart-title">
-                    <span style="margin-right: 6px; font-size: 20px;">🔍</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <template v-if="selectedCompany">
                         <span class="company-name">{{ selectedCompany.split('-').pop() }}</span>
                         <span class="title-separator">|</span>

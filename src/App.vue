@@ -43,13 +43,13 @@ import RawDataPage from './components/RawDataPage.vue'
 
 const themeOverrides = {
     common: {
-        primaryColor: '#4F46E5',
-        primaryColorHover: '#4338CA',
-        primaryColorPressed: '#3730A3',
-        primaryColorSuppl: '#6366F1',
+        primaryColor: '#1E40AF',
+        primaryColorHover: '#1E3A8A',
+        primaryColorPressed: '#1E3A8A',
+        primaryColorSuppl: '#3B82F6',
         borderRadius: '10px',
         borderRadiusSmall: '6px',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+        fontFamily: "'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
         fontSize: '14px',
         heightMedium: '38px',
     },
