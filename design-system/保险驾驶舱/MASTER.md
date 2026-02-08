@@ -7,7 +7,7 @@
 ---
 
 **Project:** 保险驾驶舱
-**Generated:** 2026-02-08 17:50:28
+**Generated:** 2026-02-08 18:09:57
 **Category:** Analytics Dashboard
 
 ---
@@ -163,11 +163,11 @@
 
 ### Page Pattern
 
-**Pattern Name:** AI Personalization Landing
+**Pattern Name:** Comparison Table + CTA
 
-- **Conversion Strategy:** 20%+ conversion with personalization. Requires analytics integration. Fallback for new users.
-- **CTA Placement:** Context-aware placement based on user segment
-- **Section Order:** 1. Dynamic hero (personalized), 2. Relevant features, 3. Tailored testimonials, 4. Smart CTA
+- **Conversion Strategy:** Use comparison to show unique value. Highlight your product row. Include 'free trial' in pricing row.
+- **CTA Placement:** Table: Right column. CTA: Below table
+- **Section Order:** 1. Hero, 2. Problem intro, 3. Comparison table (product vs competitors), 4. Pricing (optional), 5. CTA
 
 ---
 
