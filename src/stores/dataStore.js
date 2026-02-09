@@ -22,6 +22,7 @@ export const currentTab = ref(0)
 export const selectedCompany = ref(null)
 export const dataSets = ref([])
 export const currentDataSetId = ref(null)
+export const advancedAnalysisData = ref(null)
 
 // 计算属性：获取公司列表
 export const companyList = computed(() => {
@@ -301,7 +302,7 @@ export async function fetchDatasets() {
 }
 
 // API 方法：上传文件到服务器
-export async function uploadFile(file) {
+export async function uploadExcel(file) {
     try {
         const formData = new FormData()
         formData.append('file', file)
@@ -354,6 +355,22 @@ export async function deleteDataSetFromServer(dataSetId) {
         return true
     } catch (error) {
         console.error('删除数据集失败:', error)
+        throw error
+    }
+}
+
+// API 方法：获取高级分析数据
+export async function fetchAdvancedAnalysis(dataSetId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/analysis/${dataSetId}`)
+        if (!response.ok) {
+            throw new Error('获取高级分析数据失败')
+        }
+        const data = await response.json()
+        advancedAnalysisData.value = data
+        return data
+    } catch (error) {
+        console.error('获取高级分析数据失败:', error)
         throw error
     }
 }

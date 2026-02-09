@@ -1,5 +1,5 @@
 <template>
-    <div class="upload-overlay" v-if="!isDataLoaded">
+    <div class="upload-overlay" v-if="!state.isDataLoaded">
         <div style="position: absolute; top: clamp(16px, 3vw, 32px); width: 90%; max-width: 1600px; display:flex; justify-content:center;">
             <div style="display:flex; align-items:center; gap:12px;">
                 <div style="width:4px; height:28px; background: linear-gradient(180deg, #4F46E5, #06B6D4); border-radius:2px;"></div>
@@ -43,14 +43,13 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { NText, NUploadDragger } from 'naive-ui'
-import { state, uploadFile, loadDataSet, dataSets } from '../stores/dataStore'
+import { state, uploadExcel, loadDataSet, dataSets } from '../stores/dataStore'
 
 const fileInput = ref(null)
-const isDataLoaded = ref(false)
 const isUploading = ref(false)
 
 watch(() => state.isDataLoaded, (val) => {
-    isDataLoaded.value = val
+    // 不需要额外的本地状态，直接使用 store 的状态
 })
 
 const emit = defineEmits(['fileUploaded', 'closeDataManager'])
@@ -66,7 +65,7 @@ async function handleFileChange(event) {
     isUploading.value = true
     try {
         emit('closeDataManager')
-        const dataset = await uploadFile(file)
+        const dataset = await uploadExcel(file)
         await loadDataSet(dataset.id)
         emit('fileUploaded')
     } catch (error) {

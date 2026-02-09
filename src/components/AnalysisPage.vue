@@ -271,7 +271,7 @@ function onSelectCompany(company) {
 }
 
 function handleClickOutside(event) {
-    if (searchContainer.value && !searchContainer.value.contains(event.target)) {
+    if (event && searchContainer.value && !searchContainer.value.contains(event.target)) {
         dropdownVisible.value = false
     }
 }

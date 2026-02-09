@@ -32,7 +32,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NSpin, NText } from 'naive-ui'
-import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets } from './stores/dataStore'
+import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets, dataSets } from './stores/dataStore'
 import UploadOverlay from './components/UploadOverlay.vue'
 import DataManager from './components/DataManager.vue'
 import TopNavbar from './components/TopNavbar.vue'
@@ -43,10 +43,11 @@ import RawDataPage from './components/RawDataPage.vue'
 
 const themeOverrides = {
     common: {
-        primaryColor: '#4F46E5',
-        primaryColorHover: '#4338CA',
-        primaryColorPressed: '#3730A3',
-        primaryColorSuppl: '#6366F1',
+        primaryColor: '#1E40AF',
+        primaryColorHover: '#1E3A8A',
+        primaryColorPressed: '#1E3A8A',
+        primaryColorFocus: '#1E3A8A',
+        primaryColorSuppl: '#1E40AF',
         borderRadius: '10px',
         borderRadiusSmall: '6px',
         fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
@@ -77,7 +78,6 @@ const isLoading = ref(true)
 onMounted(async () => {
     try {
         await fetchDatasets()
-        const { dataSets } = await import('./stores/dataStore')
         if (dataSets.value.length > 0) {
             await loadDataSet(dataSets.value[0].id)
         }
