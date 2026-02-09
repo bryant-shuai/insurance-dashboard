@@ -22,7 +22,8 @@
                     <ControlPanel />
                     <OverviewPage v-show="currentTab === 0" />
                     <AnalysisPage v-show="currentTab === 1" />
-                    <RawDataPage v-show="currentTab === 2" />
+                    <InsightPage v-show="currentTab === 2" />
+                    <RawDataPage v-show="currentTab === 3" />
                 </div>
             </n-dialog-provider>
         </n-message-provider>
@@ -39,6 +40,7 @@ import TopNavbar from './components/TopNavbar.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import OverviewPage from './components/OverviewPage.vue'
 import AnalysisPage from './components/AnalysisPage.vue'
+import InsightPage from './components/InsightPage.vue'
 import RawDataPage from './components/RawDataPage.vue'
 
 const themeOverrides = {

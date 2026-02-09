@@ -9,12 +9,6 @@
                     >
                         结构透视
                     </div>
-                    <div 
-                        :class="['view-tab', { active: activeView === 'insight' }]" 
-                        @click="activeView = 'insight'"
-                    >
-                        行业洞察
-                    </div>
                 </div>
                 <div class="chart-title" v-if="activeView === 'detail'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -58,7 +52,7 @@
                 </div>
             </div>
             
-            <div class="analysis-layout" v-if="activeView === 'detail'">
+            <div class="analysis-layout">
                 <div class="list-container" ref="listContainer">
                     <div 
                         v-for="(item, idx) in analysisList" 
@@ -96,110 +90,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- 深度洞察视图 -->
-            <div class="insight-layout" v-else>
-                <div class="insight-grid">
-                    <!-- 左侧：市场份额分布 (Treemap) -->
-                    <div class="insight-card treemap-card">
-                        <div class="card-title">
-                            <div class="title-left">
-                                <span class="icon-rocket">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #4f46e5;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-                                </span> 市场份额矩形树图
-                            </div>
-                            
-                            <!-- 还原并优化后的图例：保留定义，采用极简布局 -->
-                            <div class="treemap-legend-inline">
-                                <div class="legend-item"><span class="legend-color star"></span>明星<span class="def">(高增高份)</span></div>
-                                <div class="legend-item"><span class="legend-color cow"></span>奶牛<span class="def">(低增高份)</span></div>
-                                <div class="legend-item"><span class="legend-color question"></span>野猫<span class="def">(高增低份)</span></div>
-                                <div class="legend-item"><span class="legend-color dog"></span>瘦狗<span class="def">(低增低份)</span></div>
-                            </div>
-                        </div>
-                        
-                        <div class="bcg-chart-wrapper">
-                            <VChart v-if="treemapData.length > 0" class="bcg-chart" :option="treemapChartOption" autoresize />
-                            <div v-else class="loading-placeholder">
-                                <div class="spinner"></div>
-                                <span>数据结构构建中...</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 右侧：核心指标 & 排位 -->
-                    <div class="insight-card info-card">
-                        <div class="card-title">
-                            <span class="icon-chart">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #10b981;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
-                            </span> 市场竞争格局洞察
-                        </div>
-                        <div class="insight-metrics" v-if="currentInsight">
-                            <div class="metric-item">
-                                <span class="label">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:middle;"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6" y2="6"></line><line x1="6" y1="18" x2="6" y2="18"></line></svg>
-                                    市场规模
-                                </span>
-                                <span class="value">{{ Math.round(currentInsight.total_premium).toLocaleString() }} 万</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="label">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
-                                    集中度 (CR4)
-                                </span>
-                                <span :class="['value', currentInsight.cr4 > 60 ? 'high' : 'low']">{{ currentInsight.cr4 }}%</span>
-                            </div>
-                        </div>
-                        
-                        <!-- 市场集中度进度条 -->
-                        <div class="market-concentration" v-if="currentInsight">
-                            <div class="concentration-header">
-                                <span class="concentration-label">市场集中度</span>
-                                <span class="concentration-type">{{ currentInsight.market_type }}</span>
-                            </div>
-                            <div class="concentration-bar-container">
-                                <div class="concentration-bar-bg">
-                                    <div 
-                                        class="concentration-bar-fill" 
-                                        :style="{ 
-                                            width: currentInsight.cr4 + '%',
-                                            background: currentInsight.cr4 > 60 ? 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)' : 
-                                                       currentInsight.cr4 > 30 ? 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)' : 
-                                                       'linear-gradient(90deg, #10b981 0%, #34d399 100%)'
-                                        }"
-                                    >
-                                        <span class="concentration-value">{{ currentInsight.cr4 }}%</span>
-                                    </div>
-                                </div>
-                                <div class="concentration-markers">
-                                    <span class="marker" style="left: 30%">30%</span>
-                                    <span class="marker" style="left: 60%">60%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 龙头排名 -->
-                        <div class="top-ranking" v-if="currentInsight?.top_companies">
-                            <div class="rank-header">市场 Top 5 份额</div>
-                            <div class="rank-list">
-                                <div v-for="(item, idx) in currentInsight.top_companies" :key="item.company" class="rank-row">
-                                    <span class="rank-num">{{ idx + 1 }}</span>
-                                    <span class="rank-name">{{ item.company.split('-').pop() }}</span>
-                                    <div class="rank-bar-bg">
-                                        <div class="rank-bar-fill" :style="{ width: (item.premium / currentInsight.total_premium * 100 * 3) + '%' }"></div>
-                                    </div>
-                                    <span class="rank-val">{{ ((item.premium / currentInsight.total_premium) * 100).toFixed(1) }}%</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <p class="analysis-text" v-if="bcgStats">
-                            当前市场中，<strong>{{ bcgStats.star }}</strong> 家公司处于高速扩张且占有率领先的“明星”位置。
-                            市场整体中位增速为 <strong>{{ summaryData?.avg_growth }}%</strong>。
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </template>
@@ -224,7 +114,6 @@ import {
 
 useECharts()
 
-const activeView = ref('detail')
 const listContainer = ref(null)
 const focusItemRefs = ref({})
 
