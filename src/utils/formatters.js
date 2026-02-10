@@ -12,12 +12,11 @@ export function formatGrowth(growth) {
 }
 
 export function formatPremium(premium) {
-  return (premium / 10000).toFixed(2)
+  return Math.round(premium).toLocaleString()
 }
 
 export function formatAxisValue(value) {
-  const v = value / 10000
-  if (v >= 1) return Math.round(v)
-  if (v === 0) return 0
-  return v.toFixed(1)
+  if (value >= 10000) return Math.round(value / 10000) + '万'
+  if (value >= 1000) return (value / 1000).toFixed(1) + 'k'
+  return Math.round(value)
 }

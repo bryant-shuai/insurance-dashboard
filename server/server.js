@@ -266,6 +266,109 @@ app.get('/api/datasets/:id', (req, res) => {
   }
 })
 
+// 获取分析数据（与生产一致）
+app.get('/api/analysis/:id', (req, res) => {
+  try {
+    const datasets = getDatasets()
+    const dataset = datasets.find(d => d.id === req.params.id)
+    
+    if (!dataset) {
+      return res.status(404).json({ error: '数据集不存在' })
+    }
+
+    const companies = dataset.companies || {}
+    const primaryInsurance = '非车险'
+
+    // 提取非车险数据
+    const nonAutoData = {}
+    Object.entries(companies).forEach(([key, value]) => {
+      if (value[primaryInsurance]) {
+        nonAutoData[key] = value[primaryInsurance]
+      }
+    })
+
+    // 计算统计指标
+    let totalPremium = 0
+    let totalGrowth = 0
+    let count = 0
+    
+    Object.values(nonAutoData).forEach(item => {
+      totalPremium += item.premium || 0
+      totalGrowth += item.growth || 0
+      count++
+    })
+    
+    const avgGrowth = count > 0 ? (totalGrowth / count).toFixed(2) : 0
+    const avgShare = 100 / count
+
+    // 构造BCG矩阵数据 — 使用平均增速和平均份额作为阈值
+    const bcgMatrix = Object.entries(nonAutoData).map(([key, value]) => {
+      const premium = value.premium || 0
+      const growth = value.growth || 0
+      const share = totalPremium > 0 ? (premium / totalPremium) * 100 : 0
+
+      let quadrant = '瘦狗'
+      if (growth >= avgGrowth && share >= avgShare) {
+        quadrant = '明星'
+      } else if (growth < avgGrowth && share >= avgShare) {
+        quadrant = '奶牛'
+      } else if (growth >= avgGrowth && share < avgShare) {
+        quadrant = '野猫'
+      }
+      
+      return {
+        name: key.split('-').pop() || key,
+        x: parseFloat(share.toFixed(2)),
+        y: parseFloat(growth.toFixed(2)),
+        z: premium,
+        quadrant,
+        premium,
+        growth,
+        share: parseFloat(share.toFixed(2))
+      }
+    })
+
+    // CR4
+    const topCompanies = [...bcgMatrix]
+      .sort((a, b) => b.z - a.z)
+      .slice(0, 4)
+    const cr4 = Math.round(topCompanies.reduce((sum, item) => sum + item.share, 0))
+
+    const analysisData = {
+      id: dataset.id,
+      name: dataset.name,
+      market_insight: {
+        '非车险': {
+          total_premium: totalPremium,
+          avg_growth: parseFloat(avgGrowth),
+          market_type: cr4 > 60 ? '高度集中' : cr4 > 30 ? '中度集中' : '分散竞争',
+          cr4: cr4,
+          top_companies: topCompanies.map(item => ({
+            company: item.name,
+            premium: item.z,
+            growth: item.y,
+            share: item.share
+          }))
+        }
+      },
+      bcg_matrix: bcgMatrix,
+      summary: {
+        total_premium: totalPremium,
+        avg_growth: parseFloat(avgGrowth),
+        company_count: count,
+        market_type: cr4 > 60 ? '高度集中' : cr4 > 30 ? '中度集中' : '分散竞争',
+        cr4: cr4
+      },
+      createdAt: dataset.createdAt
+    }
+
+    res.json(analysisData)
+  } catch (error) {
+    console.error('获取分析数据失败:', error)
+    res.status(500).json({ error: '获取分析数据失败' })
+  }
+})
+
 app.post('/api/upload', upload.single('file'), (req, res) => {
   try {
     if (!req.file) {

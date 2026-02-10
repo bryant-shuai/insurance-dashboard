@@ -3,7 +3,7 @@
         <div class="chart-header">
             <div class="chart-title">
                 <span v-if="icon" class="chart-icon">{{ icon }}</span>
-                <h3>{{ title }}</h3>
+                <h3><span class="title-text">{{ title }}</span></h3>
             </div>
             <div v-if="subtitle" class="chart-subtitle">
                 <div class="subtitle-indicator"></div>
@@ -321,6 +321,15 @@ watch(focusCompanies, () => {
     margin: 0;
     line-height: 1.3;
     font-family: var(--font-sans);
+    font-feature-settings: normal;
+    font-variant-numeric: normal;
+}
+
+.chart-title h3 .title-text {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0;
 }
 
 .chart-subtitle {
@@ -374,6 +383,12 @@ watch(focusCompanies, () => {
         font-family: var(--font-sans);
     }
 
+    .chart-title h3 .title-text {
+        font-size: 15px;
+        font-family: var(--font-sans);
+        font-weight: 700;
+    }
+
     .chart-icon {
         font-size: 20px;
     }
@@ -395,6 +410,12 @@ watch(focusCompanies, () => {
 
     .chart-title h3 {
         font-size: 14px;
+    }
+
+    .chart-title h3 .title-text {
+        font-size: 14px;
+        font-family: var(--font-sans);
+        font-weight: 700;
     }
 
     .chart-icon {
