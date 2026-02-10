@@ -4,7 +4,7 @@
 
 ```
 insurance-dashboard/
-├── backend/                 # Python后端服务
+├── server/                  # Python后端服务
 │   ├── app.py              # Flask主应用
 │   ├── excel_parser.py     # Excel/CSV文件解析器
 │   ├── requirements.txt    # Python依赖包
@@ -34,7 +34,7 @@ insurance-dashboard/
 
 1. 安装Python依赖：
 ```bash
-cd backend
+cd server
 pip install -r requirements.txt
 ```
 
@@ -52,7 +52,7 @@ npm run dev
 
 使用Gunicorn部署：
 ```bash
-cd backend
+cd server
 pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:3001 app:app
 ```
