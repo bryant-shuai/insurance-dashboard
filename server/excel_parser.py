@@ -30,8 +30,11 @@ class ExcelParser:
     def _parse_csv(self, file_path):
         """解析CSV文件"""
         try:
-            # 读取CSV文件
-            df = pd.read_csv(file_path, encoding='utf-8')
+            # 读取CSV文件，尝试多种编码
+            try:
+                df = pd.read_csv(file_path, encoding='utf-8', dtype=str)
+            except UnicodeDecodeError:
+                df = pd.read_csv(file_path, encoding='gbk', dtype=str)
             json_data = df.values.tolist()
             
             # 生成简单的HTML表格
@@ -51,22 +54,34 @@ class ExcelParser:
             raise e
     
     def _parse_excel(self, file_path):
-        """解析Excel文件"""
+        """解析Excel文件 - 增强版"""
         try:
-            # 使用pandas读取Excel
-            df = pd.read_excel(file_path)
+            logger.info(f"开始解析Excel文件: {file_path}")
+            
+            # 使用pandas读取Excel，指定编码
+            df = pd.read_excel(file_path, dtype=str)  # 读取为字符串避免编码问题
             json_data = df.values.tolist()
+            
+            logger.info(f"Excel数据读取完成，共{len(json_data)}行")
             
             # 生成HTML表格
             wb = load_workbook(file_path)
             ws = wb.active
             self.raw_html = self._worksheet_to_html(ws)
             
+            logger.info("HTML表格生成完成")
+            
             return self._process_data(json_data)
             
+        except FileNotFoundError:
+            logger.error(f"文件未找到: {file_path}")
+            raise Exception(f"文件未找到: {file_path}")
+        except pd.errors.EmptyDataError:
+            logger.error("Excel文件为空")
+            raise Exception("Excel文件为空")
         except Exception as e:
             logger.error(f"Excel解析失败: {str(e)}")
-            raise e
+            raise Exception(f"Excel解析失败: {str(e)}")
     
     def _worksheet_to_html(self, worksheet):
         """将worksheet转换为HTML表格"""
@@ -89,7 +104,9 @@ class ExcelParser:
             if i >= len(json_data):
                 continue
             row = json_data[i] if json_data[i] else []
-            str_row = ' '.join(str(cell) for cell in row if cell)
+            # 过滤掉NaN值后再连接字符串
+            filtered_cells = [str(cell) for cell in row if cell and str(cell).lower() != 'nan']
+            str_row = ' '.join(filtered_cells)
             
             if '非车险' in str_row:
                 header_idx = i
@@ -114,7 +131,8 @@ class ExcelParser:
             header = headers[i] if i < len(headers) else None
             if header and header not in ['地区', '公司名称']:
                 ins_name = str(header).strip()
-                if ins_name not in insurances:
+                # 过滤掉空值和NaN值
+                if ins_name and ins_name.lower() != 'nan' and ins_name not in insurances:
                     insurances.append(ins_name)
                     col_map[ins_name] = {}
         
@@ -147,6 +165,12 @@ class ExcelParser:
                 
             region = str(row[0]) if row[0] else ''
             name = str(row[1]) if row[1] else ''
+            
+            # 过滤掉NaN值
+            if str(region).lower() == 'nan':
+                region = ''
+            if str(name).lower() == 'nan':
+                name = ''
             
             if '合计' in region or '合计' in name or not name:
                 continue

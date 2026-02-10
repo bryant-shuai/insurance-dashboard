@@ -128,7 +128,7 @@ async function handleFileChange(event) {
     if (!file) return
     isUploading.value = true
     try {
-        const dataset = await uploadFile(file)
+        const dataset = await uploadExcel(file)
         await loadDataSet(dataset.id)
         onBack()
     } catch (error) {

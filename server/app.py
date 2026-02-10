@@ -178,35 +178,54 @@ def get_analysis_data(dataset_id):
 
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
-    """上传文件"""
+    """上传文件 - 增强版"""
     try:
+        logger.info("收到文件上传请求")
+        
+        # 检查文件
         if 'file' not in request.files:
+            logger.error("请求中没有文件")
             return jsonify({'error': '没有上传文件'}), 400
         
         file = request.files['file']
         if file.filename == '':
+            logger.error("文件名为空")
             return jsonify({'error': '没有选择文件'}), 400
-
+        
+        # 验证文件类型
         if not allowed_file(file.filename):
+            logger.error(f"不支持的文件类型: {file.filename}")
             return jsonify({'error': '只支持 .xlsx, .xls, .csv 格式的文件'}), 400
-
+        
+        logger.info(f"开始处理文件: {file.filename}")
+        
         # 保存文件
-        filename = secure_filename(file.filename)
+        original_filename = file.filename
         timestamp = int(datetime.now().timestamp() * 1000)
         random_num = str(uuid.uuid4().int)[:4]
-        ext = os.path.splitext(filename)[1]
+        ext = os.path.splitext(original_filename)[1]
         new_filename = f"{timestamp}-{random_num}{ext}"
         
         file_path = os.path.join(UPLOAD_FOLDER, new_filename)
         file.save(file_path)
-
+        logger.info(f"文件已保存到: {file_path}")
+        
         # 解析文件
         parser = ExcelParser()
-        result = parser.parse_file(file_path)
-
+        try:
+            result = parser.parse_file(file_path)
+            logger.info("文件解析成功")
+        except Exception as parse_error:
+            logger.error(f"文件解析失败: {str(parse_error)}")
+            # 删除已保存的文件
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            return jsonify({'error': f'文件解析失败: {str(parse_error)}'}), 400
+        
         # 创建数据集记录
         dataset_id = str(int(datetime.now().timestamp() * 1000))
-        file_name_without_ext = os.path.splitext(filename)[0]
+        # 使用原始文件名（不含扩展名）作为数据集名称
+        file_name_without_ext = os.path.splitext(original_filename)[0]
         
         new_dataset = {
             'id': dataset_id,
@@ -217,16 +236,24 @@ def upload_file():
             'rawHtml': result['raw_html'],
             'createdAt': datetime.now().isoformat()
         }
-
+        
+        logger.info(f"创建数据集记录，ID: {dataset_id}")
+        
         # 保存到数据集
         datasets = get_datasets()
         datasets.append(new_dataset)
-        save_datasets(datasets)
-
+        if save_datasets(datasets):
+            logger.info("数据集保存成功")
+        else:
+            logger.error("数据集保存失败")
+            return jsonify({'error': '数据保存失败'}), 500
+        
+        logger.info(f"文件上传完成: {file.filename}")
         return jsonify(new_dataset)
+        
     except Exception as e:
-        logger.error(f"上传文件失败: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        logger.error(f"上传文件失败: {str(e)}", exc_info=True)
+        return jsonify({'error': f'上传失败: {str(e)}'}), 500
 
 @app.route('/api/datasets/<dataset_id>', methods=['DELETE'])
 def delete_dataset(dataset_id):
