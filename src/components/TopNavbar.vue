@@ -46,8 +46,8 @@ import { SettingsOutline, ServerOutline } from '@vicons/ionicons5'
 import { currentTab, switchTab, currentDataSetId, dataSets } from '../stores/dataStore'
 import { computed } from 'vue'
 
-const tabs = ['全景概览', '深度分析', '行业洞察', '原始数据']
-const tabIcons = ['📊', '🔍', '💡', '📋']
+const tabs = ['全景概览', '深度分析', '行业洞察', '原始数据', '智能助手']
+const tabIcons = ['📊', '🔍', '💡', '📋', '🤖']
 
 const currentDataSetName = computed(() => {
     const dataset = dataSets.value.find(ds => ds.id === currentDataSetId.value)

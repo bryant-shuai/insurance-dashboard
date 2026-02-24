@@ -24,6 +24,7 @@
                     <AnalysisPage v-show="currentTab === 1" />
                     <InsightPage v-show="currentTab === 2" />
                     <RawDataPage v-show="currentTab === 3" />
+                    <ChatPage v-show="currentTab === 4" />
                 </div>
             </n-dialog-provider>
         </n-message-provider>
@@ -42,6 +43,7 @@ import OverviewPage from './components/OverviewPage.vue'
 import AnalysisPage from './components/AnalysisPage.vue'
 import InsightPage from './components/InsightPage.vue'
 import RawDataPage from './components/RawDataPage.vue'
+import ChatPage from './components/ChatPage.vue'
 
 const themeOverrides = {
     common: {
