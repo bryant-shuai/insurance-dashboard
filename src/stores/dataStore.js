@@ -362,7 +362,7 @@ export async function deleteDataSetFromServer(dataSetId) {
 // API 方法：获取高级分析数据
 export async function fetchAdvancedAnalysis(dataSetId) {
     try {
-        const response = await fetch(`${API_BASE_URL}/analysis/${dataSetId}`)
+        const response = await fetch(`${API_BASE_URL}/datasets/${dataSetId}`)
         if (!response.ok) {
             throw new Error('获取高级分析数据失败')
         }

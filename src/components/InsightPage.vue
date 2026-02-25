@@ -510,16 +510,8 @@ const getShare = (item) => {
 }
 
 const getQuadrantClass = (item) => {
-    const g = item.growth || 0
-    const s = item.share || (
-        currentInsight.value
-            ? ((item.realValue || item.value) / currentInsight.value.total_premium) * 100
-            : 0
-    )
-    if (g >= 10 && s >= 5) return 'quadrant-star'
-    if (g < 10 && s >= 5) return 'quadrant-cow'
-    if (g >= 10 && s < 5) return 'quadrant-question'
-    return 'quadrant-dog'
+    const map = { '明星': 'quadrant-star', '奶牛': 'quadrant-cow', '野猫': 'quadrant-question', '瘦狗': 'quadrant-dog' }
+    return map[item.quadrant] || 'quadrant-dog'
 }
 
 const getQuadrantColor = (item) => {
@@ -559,7 +551,7 @@ const bcgStats = computed(() => {
     const stars = bcgMatrix.value.filter(d => d.quadrant === '明星')
     return {
         star: stars.length,
-        starNames: stars.map(d => d.name),
+        starNames: stars.map(d => d.name.replace(/^[^-]+-/, '')),
         cow: bcgMatrix.value.filter(d => d.quadrant === '奶牛').length,
         wildcat: bcgMatrix.value.filter(d => d.quadrant === '野猫').length,
         dog: bcgMatrix.value.filter(d => d.quadrant === '瘦狗').length
