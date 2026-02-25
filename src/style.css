@@ -801,7 +801,8 @@ h1, h2, h3, h4, h5, h6 {
 
 .table-box table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     font-size: clamp(12px, 0.85vw, 14px);
     color: var(--text-primary);
 }
@@ -815,34 +816,45 @@ h1, h2, h3, h4, h5, h6 {
     transition: all var(--transition-fast);
 }
 
-.table-box tr:first-child td {
-    background: var(--bg-elevated) !important;
+/* 表头行样式 - 前三行固定 */
+.table-box tr:first-child td,
+.table-box tr:nth-child(2) td,
+.table-box tr:nth-child(3) td {
+    background: var(--bg-elevated);
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
     position: -webkit-sticky;
     position: sticky;
-    top: 0;
-    z-index: 11;
     letter-spacing: 0.02em;
-    border-bottom: 2px solid var(--border-default);
+    border: 1px solid var(--border-light);
     height: 40px;
+    min-height: 40px;
+    max-height: 40px;
+    line-height: 16px;
+    padding-top: 11px;
+    padding-bottom: 11px;
+    box-sizing: border-box;
+    transition: none;
+    overflow: hidden;
 }
 
-/* 第二行表头（指标行）- 使用更精确的选择器 */
-.table-box tr:nth-child(2) td,
-.table-box tr:first-child + tr td {
-    background: var(--bg-elevated) !important;
-    font-weight: 700;
-    color: var(--text-primary);
-    text-align: center;
-    position: -webkit-sticky;
-    position: sticky;
+/* 第一行（标题行）- 最顶部 */
+.table-box tr:first-child td {
+    top: 0;
+    z-index: 12;
+}
+
+/* 第二行（险种行）- 标题行下方 */
+.table-box tr:nth-child(2) td {
     top: 40px;
+    z-index: 11;
+}
+
+/* 第三行（指标行）- 险种行下方 */
+.table-box tr:nth-child(3) td {
+    top: 80px;
     z-index: 10;
-    letter-spacing: 0.02em;
-    border-bottom: 2px solid var(--border-default);
-    height: 40px;
 }
 
 .table-box tbody tr {
