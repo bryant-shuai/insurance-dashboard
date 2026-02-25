@@ -30,23 +30,37 @@ const filteredHtml = computed(() => {
     
     if (!table) return state.rawHtml
     
-    // 查找"地区"列的索引 - 从第二行查找（第一行是标题，第二行是表头）
     const rows = table.querySelectorAll('tr')
     if (rows.length < 2) return state.rawHtml
     
-    const headerRow = rows[1] // 第二行是表头行
-    const cells = Array.from(headerRow.querySelectorAll('td'))
-    const regionColIndex = cells.findIndex(cell => 
-        cell.textContent.trim() === '地区' || 
-        cell.textContent.trim().includes('地区')
-    )
+    // 找到包含"地区"单元格的行
+    let regionRowIndex = -1
+    let regionCell = null
     
-    if (regionColIndex === -1) return state.rawHtml
+    for (let i = 0; i < rows.length; i++) {
+        const cells = rows[i].querySelectorAll('td, th')
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].textContent.trim() === '地区') {
+                regionRowIndex = i
+                regionCell = cells[j]
+                break
+            }
+        }
+        if (regionCell) break
+    }
     
-    // 删除所有行的该列（从第二行开始，保留标题行）
-    for (let i = 1; i < rows.length; i++) {
-        const cell = rows[i].querySelectorAll('td')[regionColIndex]
-        if (cell) cell.remove()
+    if (!regionCell) return state.rawHtml
+    
+    // 获取该单元格的 rowspan 值
+    const rowspan = parseInt(regionCell.getAttribute('rowspan') || '1')
+    
+    // 删除"地区"单元格
+    regionCell.remove()
+    
+    // 对于 rowspan 之后的所有数据行，删除第一个单元格（地区数据，如"广州市"）
+    for (let i = regionRowIndex + rowspan; i < rows.length; i++) {
+        const firstCell = rows[i].querySelector('td, th')
+        if (firstCell) firstCell.remove()
     }
     
     return table.outerHTML
@@ -60,7 +74,6 @@ const filteredHtml = computed(() => {
     display: flex;
     flex-direction: column;
     gap: clamp(12px, 1.5vw, 20px);
-    overflow: hidden;
     min-height: 0;
 }
 
@@ -75,7 +88,6 @@ const filteredHtml = computed(() => {
     display: flex;
     flex-direction: column;
     flex: 1;
-    overflow: hidden;
     min-height: 0;
 }
 

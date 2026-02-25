@@ -778,7 +778,6 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: var(--radius-lg);
     background: var(--bg-card);
     box-shadow: var(--shadow-sm);
-    position: relative;
 }
 
 .table-box::-webkit-scrollbar {
@@ -816,22 +815,34 @@ h1, h2, h3, h4, h5, h6 {
     transition: all var(--transition-fast);
 }
 
-.table-box tr:first-child td,
-.table-box tr:nth-child(2) td {
-    background: linear-gradient(180deg, var(--bg-elevated), var(--bg-muted));
+.table-box tr:first-child td {
+    background: var(--bg-elevated) !important;
     font-weight: 700;
     color: var(--text-primary);
     text-align: center;
+    position: -webkit-sticky;
     position: sticky;
     top: 0;
+    z-index: 11;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid var(--border-default);
+    height: 40px;
+}
+
+/* 第二行表头（指标行）- 使用更精确的选择器 */
+.table-box tr:nth-child(2) td,
+.table-box tr:first-child + tr td {
+    background: var(--bg-elevated) !important;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-align: center;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 40px;
     z-index: 10;
     letter-spacing: 0.02em;
     border-bottom: 2px solid var(--border-default);
-}
-
-.table-box tr:nth-child(2) td {
-    top: 40px;
-    z-index: 9;
+    height: 40px;
 }
 
 .table-box tbody tr {
