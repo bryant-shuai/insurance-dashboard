@@ -11,8 +11,8 @@ REMOTE_HOST="8.134.128.222"
 REMOTE_USER="root"
 REMOTE_DIR="/home/admin/msq/dist"
 SERVER_DIR="/home/admin/msq/insurance-dashboardnew/insurance-dashboard"
-SSH_CMD="ssh -F /dev/null"
-RSYNC_CMD="rsync -avz -e 'ssh -F /dev/null'"
+SSH_CMD="ssh"
+RSYNC_CMD="rsync -avz -e 'ssh'"
 
 # 本地构建
 echo "📦 构建前端..."
