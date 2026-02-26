@@ -5,6 +5,8 @@ import { createRequire } from 'module'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
 const require = createRequire(import.meta.url)
 const XLSX = require('xlsx')
@@ -26,6 +28,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb', parameterLimit: 1000
 const uploadDir = path.join(__dirname, 'uploads')
 const dataDir = path.join(__dirname, 'data')
 const datasetsFile = path.join(dataDir, 'datasets.json')
+const usersFile = path.join(dataDir, 'users.json')
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -65,6 +68,33 @@ function ensureDirectories() {
   }
   if (!fs.existsSync(datasetsFile)) {
     fs.writeFileSync(datasetsFile, JSON.stringify([], null, 2))
+  }
+  if (!fs.existsSync(usersFile)) {
+    fs.writeFileSync(usersFile, JSON.stringify([], null, 2))
+  }
+}
+
+function getUsers() {
+  try {
+    if (fs.existsSync(usersFile)) {
+      const data = fs.readFileSync(usersFile, 'utf-8')
+      return JSON.parse(data)
+    }
+    return []
+  } catch (error) {
+    console.error('读取用户数据失败:', error)
+    return []
+  }
+}
+
+function saveUsers(users) {
+  try {
+    const data = JSON.stringify(users, null, 2)
+    fs.writeFileSync(usersFile, data, 'utf8')
+    return true
+  } catch (error) {
+    console.error('保存用户数据失败:', error)
+    return false
   }
 }
 
@@ -219,6 +249,132 @@ function parseExcelFile(filePath) {
     throw error
   }
 }
+
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { username, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ error: '用户名和密码不能为空' })
+    }
+
+    // 格式校验
+    const usernameRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{4,20}$/
+    if (!usernameRegex.test(username)) {
+      return res.status(400).json({ error: '用户名只能包含英文、数字和符号，长度4-20位' })
+    }
+
+    const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{4,20}$/
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ error: '密码只能包含英文、数字和符号，长度4-20位' })
+    }
+
+    const users = getUsers()
+    if (users.find(u => u.username === username)) {
+      return res.status(400).json({ error: '用户名已存在' })
+    }
+
+    const newUser = {
+      id: Date.now().toString(),
+      username,
+      password,
+      createdAt: new Date().toISOString()
+    }
+
+    users.push(newUser)
+    saveUsers(users)
+
+    res.json({ success: true, user: { username: newUser.username } })
+  } catch (error) {
+    console.error('注册失败:', error)
+    res.status(500).json({ error: '注册失败' })
+  }
+})
+
+// 获取用户列表（仅用于管理员管理）
+app.get('/api/users', (req, res) => {
+  try {
+    const users = getUsers()
+    // 为了安全，不返回密码
+    const safeUsers = users.map(u => ({
+      id: u.id,
+      username: u.username,
+      role: u.role || 'user',
+      createdAt: u.createdAt
+    }))
+    res.json(safeUsers)
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
+    res.status(500).json({ error: '获取用户列表失败' })
+  }
+})
+
+// 删除用户
+app.delete('/api/users/:username', (req, res) => {
+  try {
+    const { username } = req.params
+    if (username === 'admin') {
+      return res.status(403).json({ error: '不能删除管理员账号' })
+    }
+
+    const users = getUsers()
+    const newUsers = users.filter(u => u.username !== username)
+    
+    if (users.length === newUsers.length) {
+      return res.status(404).json({ error: '用户不存在' })
+    }
+
+    saveUsers(newUsers)
+    res.json({ success: true })
+  } catch (error) {
+    console.error('删除用户失败:', error)
+    res.status(500).json({ error: '删除用户失败' })
+  }
+})
+
+app.patch('/api/users/:username/password', (req, res) => {
+  try {
+    const { username } = req.params
+    const { password } = req.body
+    if (!password) {
+      return res.status(400).json({ error: '密码不能为空' })
+    }
+    const passwordRegex = /^[a-zA-Z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{4,20}$/
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ error: '密码只能包含英文、数字和符号，长度4-20位' })
+    }
+    const users = getUsers()
+    const user = users.find(u => u.username === username)
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' })
+    }
+    user.password = password
+    saveUsers(users)
+    res.json({ success: true })
+  } catch (error) {
+    res.status(500).json({ error: '修改密码失败' })
+  }
+})
+
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { username, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ error: '用户名和密码不能为空' })
+    }
+
+    const users = getUsers()
+    const user = users.find(u => u.username === username && u.password === password)
+
+    if (!user) {
+       return res.status(401).json({ error: '用户名或密码错误' })
+     }
+ 
+     res.json({ success: true, user: { username: user.username, role: user.role || 'user' } })
+   } catch (error) {
+    console.error('登录失败:', error)
+    res.status(500).json({ error: '登录失败' })
+  }
+})
 
 app.get('/api/datasets', (req, res) => {
   try {

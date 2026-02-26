@@ -300,6 +300,7 @@ h1, h2, h3, h4, h5, h6 {
     border: 2px solid #1E3A8A !important;
     border-bottom-width: 3px !important;
     border-right-width: 3px !important;
+    overflow: hidden; /* 防止伪元素溢出 */
 }
 
 .manage-btn.enhanced-button.coordinated-button:hover {
@@ -338,6 +339,8 @@ h1, h2, h3, h4, h5, h6 {
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
     transition: left 0.6s;
     border-radius: 8px;
+    pointer-events: none; /* 关键修复：防止伪元素拦截鼠标事件 */
+    z-index: 1; /* 确保在内容之下但在背景之上 */
 }
 
 .manage-btn.enhanced-button.coordinated-button:hover::before {

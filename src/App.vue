@@ -14,7 +14,10 @@
                 <DataManager v-else-if="showDataManager && state.isDataLoaded" @back="onBackFromDataManager" />
 
                 <!-- Upload Overlay -->
-                <UploadOverlay v-else-if="!state.isDataLoaded" ref="uploadOverlay" @fileUploaded="onFileUploaded" @closeDataManager="showDataManager = false" />
+                <UploadOverlay v-else-if="!state.isDataLoaded && state.user" ref="uploadOverlay" @fileUploaded="onFileUploaded" @closeDataManager="showDataManager = false" />
+                
+                <!-- Auth Page -->
+                <AuthPage v-else-if="!state.user" />
 
                 <!-- Main App -->
                 <div class="container" v-else>
@@ -34,9 +37,10 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NSpin, NText } from 'naive-ui'
-import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets, dataSets } from './stores/dataStore'
+import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets, dataSets, checkAuth } from './stores/dataStore'
 import UploadOverlay from './components/UploadOverlay.vue'
 import DataManager from './components/DataManager.vue'
+import AuthPage from './components/AuthPage.vue'
 import TopNavbar from './components/TopNavbar.vue'
 import ControlPanel from './components/ControlPanel.vue'
 import OverviewPage from './components/OverviewPage.vue'
@@ -80,6 +84,9 @@ const showDataManager = ref(false)
 const isLoading = ref(true)
 
 onMounted(async () => {
+    // 检查登录状态
+    checkAuth()
+    
     try {
         await fetchDatasets()
         if (dataSets.value.length > 0) {

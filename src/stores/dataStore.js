@@ -13,7 +13,8 @@ export const state = reactive({
     insurances: [],
     companies: {},
     rawHtml: '',
-    isDataLoaded: false
+    isDataLoaded: false,
+    user: null
 })
 
 export const focusCompanies = ref([])
@@ -23,6 +24,146 @@ export const selectedCompany = ref(null)
 export const dataSets = ref([])
 export const currentDataSetId = ref(null)
 export const advancedAnalysisData = ref(null)
+
+// 认证方法
+export async function login(username, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        })
+        
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || '登录失败')
+        }
+        
+        const data = await response.json()
+        state.user = data.user
+        
+        // 保存用户信息和登录时间戳
+        localStorage.setItem('user', JSON.stringify(data.user))
+        localStorage.setItem('loginTime', Date.now().toString())
+        
+        return data.user
+    } catch (error) {
+        console.error('登录失败:', error)
+        throw error
+    }
+}
+
+export async function register(username, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username, password })
+        })
+        
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || '注册失败')
+        }
+        
+        const data = await response.json()
+        return data.user
+    } catch (error) {
+        console.error('注册失败:', error)
+        throw error
+    }
+}
+
+export function logout() {
+    state.user = null
+    localStorage.removeItem('user')
+    localStorage.removeItem('loginTime')
+    currentTab.value = 0
+}
+
+export function checkAuth() {
+    const savedUser = localStorage.getItem('user')
+    const loginTime = localStorage.getItem('loginTime')
+    
+    if (savedUser && loginTime) {
+        // 检查是否过期（24小时 = 24 * 60 * 60 * 1000 毫秒）
+        const ONE_DAY = 24 * 60 * 60 * 1000
+        const now = Date.now()
+        
+        if (now - parseInt(loginTime) > ONE_DAY) {
+            // 已过期，自动登出
+            logout()
+            return false
+        }
+
+        try {
+            state.user = JSON.parse(savedUser)
+            return true
+        } catch (e) {
+            logout()
+        }
+    } else {
+        // 如果有 user 但没时间戳，视为旧数据，强制登出以更新机制
+        if (savedUser) logout()
+    }
+    return false
+}
+
+// 用户管理方法
+export const isAdmin = computed(() => state.user && state.user.role === 'admin')
+
+export async function fetchUsers() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users`)
+        if (!response.ok) {
+            throw new Error('获取用户列表失败')
+        }
+        return await response.json()
+    } catch (error) {
+        console.error('获取用户列表失败:', error)
+        throw error
+    }
+}
+
+export async function deleteUser(username) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${username}`, {
+            method: 'DELETE'
+        })
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || '删除用户失败')
+        }
+        return true
+    } catch (error) {
+        console.error('删除用户失败:', error)
+        throw error
+    }
+}
+
+export async function updateUserPassword(username, password) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(username)}/password`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password })
+        })
+        if (!response.ok) {
+            const error = await response.json()
+            throw new Error(error.error || '修改密码失败')
+        }
+        return true
+    } catch (error) {
+        console.error('修改密码失败:', error)
+        throw error
+    }
+}
 
 // 计算属性：获取公司列表
 export const companyList = computed(() => {
