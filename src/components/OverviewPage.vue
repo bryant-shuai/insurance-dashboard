@@ -20,6 +20,7 @@
 <script setup>
 import EChartsBar from './EChartsBar.vue'
 import { rankingData } from '../stores/dataStore'
+
 </script>
 
 <style scoped>
