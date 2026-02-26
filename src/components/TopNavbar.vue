@@ -47,66 +47,7 @@ import { currentTab, switchTab, currentDataSetId, dataSets } from '../stores/dat
 import { computed } from 'vue'
 
 const tabs = ['全景概览', '深度分析', '行业洞察', '原始数据', '智能助手']
-// 彩色渐变填充图标 - 更现代、更有视觉冲击力
-const tabIcons = [
-  // 全景概览 - 地球/全景图标
-  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="url(#gradient1)">
-    <defs>
-      <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#4F46E5"/>
-        <stop offset="100%" style="stop-color:#06B6D4"/>
-      </linearGradient>
-    </defs>
-    <circle cx="12" cy="12" r="10" opacity="0.2"/>
-    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
-  </svg>`,
-  // 深度分析 - 放大镜/分析图标
-  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="url(#gradient2)">
-    <defs>
-      <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#7C3AED"/>
-        <stop offset="100%" style="stop-color:#EC4899"/>
-      </linearGradient>
-    </defs>
-    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-    <circle cx="9.5" cy="9.5" r="2.5" opacity="0.3"/>
-  </svg>`,
-  // 行业洞察 - 灯泡/洞察图标
-  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="url(#gradient3)">
-    <defs>
-      <linearGradient id="gradient3" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#F59E0B"/>
-        <stop offset="100%" style="stop-color:#EF4444"/>
-      </linearGradient>
-    </defs>
-    <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-    <path d="M12 4c-2.76 0-5 2.24-5 5 0 1.63.8 3.16 2.15 4.1l.85.6V16h4v-2.3l.85-.6A4.997 4.997 0 0 0 17 9c0-2.76-2.24-5-5-5z" opacity="0.3"/>
-  </svg>`,
-  // 原始数据 - 文档/数据图标
-  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="url(#gradient4)">
-    <defs>
-      <linearGradient id="gradient4" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#10B981"/>
-        <stop offset="100%" style="stop-color:#059669"/>
-      </linearGradient>
-    </defs>
-    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-    <path d="M8 12h8v2H8zm0 4h8v2H8z" opacity="0.4"/>
-  </svg>`,
-  // 智能助手 - AI/机器人图标
-  `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="url(#gradient5)">
-    <defs>
-      <linearGradient id="gradient5" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:#3B82F6"/>
-        <stop offset="100%" style="stop-color:#8B5CF6"/>
-      </linearGradient>
-    </defs>
-    <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.38-1 1.72v.78h3c1.1 0 2 .9 2 2v8c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2V8.5c0-1.1.9-2 2-2h3v-.78c-.6-.34-1-.98-1-1.72a2 2 0 0 1 2-2M12 4a1 1 0 0 0-1 1 1 1 0 0 0 1 1 1 1 0 0 0 1-1 1 1 0 0 0-1-1zm-4 5.5v8h8v-8H8z"/>
-    <circle cx="10" cy="10" r="1" fill="white"/>
-    <circle cx="14" cy="10" r="1" fill="white"/>
-    <path d="M12 17.5c1.33 0 2.42-.83 2.82-2H9.18c.4 1.17 1.49 2 2.82 2z" fill="white" opacity="0.8"/>
-  </svg>`
-]
+const tabIcons = ['🌐', '🔬', '💡', '📋', '🤖']
 
 const currentDataSetName = computed(() => {
     const dataset = dataSets.value.find(ds => ds.id === currentDataSetId.value)
@@ -122,20 +63,8 @@ function onTabClick(idx) {
 
 <style scoped>
 .nav-icon {
-    margin-right: 6px;
-    display: flex;
-    align-items: center;
-    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
-    transition: transform 0.2s ease;
-}
-
-.nav-icon svg {
-    width: 18px;
-    height: 18px;
-}
-
-.nav-item:hover .nav-icon {
-    transform: scale(1.1);
+    font-size: 16px;
+    margin-right: 4px;
 }
 
 /* 移动端适配 */
