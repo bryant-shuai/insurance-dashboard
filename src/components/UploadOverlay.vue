@@ -4,7 +4,7 @@
             <div style="display:flex; align-items:center; gap:12px;">
                 <div style="width:4px; height:28px; background: linear-gradient(180deg, #4F46E5, #06B6D4); border-radius:2px;"></div>
                 <h1 style="font-size: clamp(18px, 2vw, 28px); font-weight: 800; color: #111827; letter-spacing: -0.03em; font-family: 'Inter', sans-serif;">
-                    📈 广州市行业非车险数据看板
+                    <span style="display:flex; align-items:center; gap:8px;"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#4F46E5;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> 广州市行业非车险数据看板</span>
                 </h1>
             </div>
         </div>
@@ -14,7 +14,7 @@
                 <n-upload-dragger style="border: none; background: transparent; padding: 0;">
                     <div style="display:flex; flex-direction:column; align-items:center; gap: 12px;">
                         <div style="width:64px; height:64px; background: var(--primary-light, #EEF2FF); border-radius: 16px; display:flex; align-items:center; justify-content:center; font-size:28px;">
-                            📂
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#4F46E5;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                         </div>
                         <n-text style="font-size: clamp(15px, 1.2vw, 18px); font-weight: 700; color: #111827;">
                             点击上传数据文件

@@ -3,6 +3,7 @@
         <div class="chart-header">
             <div class="chart-title">
                 <span v-if="icon" class="chart-icon">{{ icon }}</span>
+                                <span v-if="iconSvg" class="chart-icon" v-html="iconSvg"></span>
                 <h3><span class="title-text">{{ title }}</span></h3>
             </div>
             <div v-if="subtitle" class="chart-subtitle">
@@ -35,6 +36,7 @@ const props = defineProps({
     title: { type: String, required: true },
     subtitle: { type: String, default: '' },
     icon: { type: String, default: '' },
+        iconSvg: { type: String, default: '' },
     data: { type: Array, default: () => [] },
     mainType: { type: String, default: 'premium' }
 })
@@ -312,6 +314,13 @@ watch(focusCompanies, () => {
     font-size: 24px;
     line-height: 1;
     font-family: var(--font-sans);
+    display: flex;
+    align-items: center;
+}
+
+.chart-icon svg {
+    width: 24px;
+    height: 24px;
 }
 
 .chart-title h3 {
