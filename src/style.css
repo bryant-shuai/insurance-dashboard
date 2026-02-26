@@ -842,19 +842,26 @@ h1, h2, h3, h4, h5, h6 {
 /* 第一行（标题行）- 最顶部 */
 .table-box tr:first-child td {
     top: 0;
-    z-index: 12;
+    z-index: 100;
 }
 
 /* 第二行（险种行）- 标题行下方 */
 .table-box tr:nth-child(2) td {
     top: 40px;
-    z-index: 11;
+    z-index: 99;
 }
 
 /* 第三行（指标行）- 险种行下方 */
 .table-box tr:nth-child(3) td {
     top: 80px;
-    z-index: 10;
+    z-index: 98;
+}
+
+/* 表头悬停时确保显示在数据层之上 */
+.table-box tr:first-child td:hover,
+.table-box tr:nth-child(2) td:hover,
+.table-box tr:nth-child(3) td:hover {
+    z-index: 101;
 }
 
 .table-box tbody tr {
