@@ -10,9 +10,6 @@
                     </div>
                 </div>
 
-                <!-- Data Manager -->
-                <DataManager v-else-if="showDataManager && state.isDataLoaded" @back="onBackFromDataManager" />
-
                 <!-- Upload Overlay -->
                 <UploadOverlay v-else-if="!state.isDataLoaded && state.user" ref="uploadOverlay" @fileUploaded="onFileUploaded" @closeDataManager="showDataManager = false" />
                 
@@ -21,13 +18,17 @@
 
                 <!-- Main App -->
                 <div class="container" v-else>
-                    <TopNavbar @switchData="onSwitchData" />
-                    <ControlPanel />
-                    <OverviewPage v-show="currentTab === 0" />
-                    <AnalysisPage v-show="currentTab === 1" />
-                    <InsightPage v-show="currentTab === 2" />
-                    <RawDataPage v-show="currentTab === 3" />
-                    <ChatPage v-show="currentTab === 4" />
+                    <TopNavbar @switchData="onSwitchDataFromNav" />
+                    <template v-if="!showDataManager">
+                        <ControlPanel />
+                        <OverviewPage v-show="currentTab === 0" />
+                        <AnalysisPage v-show="currentTab === 1" />
+                        <InsightPage v-show="currentTab === 2" />
+                        <RawDataPage v-show="currentTab === 3" />
+                        <ChatPage v-show="currentTab === 4" />
+                    </template>
+                    <!-- Admin Panel -->
+                    <DataManager v-else @back="onBackFromDataManager" />
                 </div>
             </n-dialog-provider>
         </n-message-provider>
@@ -105,6 +106,15 @@ async function onFileUploaded() {
 
 function onSwitchData() {
     showDataManager.value = true
+}
+
+function onSwitchDataFromNav(value) {
+    // 如果传入 false，关闭后台管理；否则切换状态
+    if (value === false) {
+        showDataManager.value = false
+    } else {
+        showDataManager.value = !showDataManager.value
+    }
 }
 
 function onBackFromDataManager() {

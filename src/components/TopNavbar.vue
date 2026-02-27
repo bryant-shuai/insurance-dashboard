@@ -1,5 +1,5 @@
 <template>
-    <div class="top-navbar">
+    <div class="top-navbar" @click="onNavbarClick">
         <div class="nav-brand">
             <div class="nav-title">广州市行业非车险数据</div>
             <n-tag v-if="currentDataSetName" size="small" :bordered="false" round type="success" class="dataset-tag">
@@ -36,7 +36,7 @@
                     </n-button>
                 </n-dropdown>
             </div>
-            <div class="action-btn-wrapper">
+            <div class="action-btn-wrapper" v-if="isAdmin">
                 <n-button 
                     type="primary" 
                     @click="$emit('switchData')" 
@@ -50,7 +50,7 @@
                             </svg>
                         </n-icon>
                     </template>
-                    <span class="btn-text">数据管理</span>
+                    <span class="btn-text">后台管理</span>
                 </n-button>
             </div>
         </div>
@@ -60,7 +60,7 @@
 <script setup>
 import { NTag, NButton, NIcon, NDropdown, useMessage } from 'naive-ui'
 import { SettingsOutline, ServerOutline, PersonCircleOutline, LogOutOutline } from '@vicons/ionicons5'
-import { currentTab, switchTab, currentDataSetId, dataSets, state, logout } from '../stores/dataStore'
+import { currentTab, switchTab, currentDataSetId, dataSets, state, logout, isAdmin } from '../stores/dataStore'
 import { computed, h } from 'vue'
 
 const message = useMessage()
@@ -83,7 +83,6 @@ const userOptions = [
 function handleUserSelect(key) {
     if (key === 'logout') {
         logout()
-        message.success('已退出登录')
     }
 }
 
@@ -91,6 +90,17 @@ const emit = defineEmits(['switchData'])
 
 function onTabClick(idx) {
     switchTab(idx)
+}
+
+function onNavbarClick(event) {
+    // 如果点击的是导航按钮，让事件正常处理
+    // 这个处理器确保点击顶部导航栏时，后台管理页面会关闭
+    const isNavItem = event.target.closest('.nav-item')
+    const isManageBtn = event.target.closest('.manage-btn')
+    if (isNavItem && !isManageBtn) {
+        // 点击了导航tab，关闭后台管理
+        emit('switchData', false)
+    }
 }
 </script>
 

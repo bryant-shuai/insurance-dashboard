@@ -1,7 +1,7 @@
 /* ===== Design System: BI/Analytics Dashboard ===== */
 /* Inspired by modern data platforms — clean, spacious, data-first */
 
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap');
 
 :root {
     /* Primary Palette - Professional Blue (from Design System) */
@@ -63,8 +63,8 @@
     --chart-tertiary: #8B5CF6;
     --chart-highlight: #F59E0B;
 
-    /* Typography - Fira Code/Sans for data dashboard */
-    --font-sans: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* Typography - Inter for modern UI, Fira Code for data */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Fira Code', 'Courier New', monospace;
 }
 
@@ -207,7 +207,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: clamp(6px, 0.6vw, 8px) clamp(14px, 1.6vw, 28px);
     border-radius: calc(var(--radius-md) - 2px);
     font-size: clamp(12px, 0.85vw, 14px);
-    font-weight: 600;
+    font-weight: 500;
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition-normal);
@@ -244,7 +244,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: clamp(6px, 0.6vw, 10px) clamp(12px, 1.2vw, 20px);
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-weight: 600;
+    font-weight: 500;
     font-size: clamp(12px, 0.82vw, 14px);
     transition: var(--transition-normal);
     display: flex;

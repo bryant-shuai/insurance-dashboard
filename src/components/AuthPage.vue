@@ -98,9 +98,8 @@ async function handleSubmit(e) {
             loading.value = true
             try {
                 await login(formValue.username, formValue.password)
-                message.success('登录成功')
             } catch (error) {
-                message.error(error.message || '登录失败')
+                message.error(error.message || '登录失败', { duration: 2000 })
             } finally {
                 loading.value = false
             }
@@ -115,14 +114,19 @@ async function handleSubmit(e) {
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    position: relative;
+    overflow: hidden;
 }
 
 .auth-card {
     width: 100%;
     max-width: 400px;
     border-radius: 16px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 1;
 }
 
 .auth-header {
