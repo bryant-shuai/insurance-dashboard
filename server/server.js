@@ -13,7 +13,7 @@ const XLSX = require('xlsx')
 
 // FastGPT 配置
 const FASTGPT_API_URL = 'https://api.fastgpt.in/api/v1/chat/completions'
-const FASTGPT_API_KEY = 'fastgpt-bRqj49fNjPdfLASbuKuA3r2ylzqaXfNSgfNZaAGzxaQfdouRVCVLSj7FUeD'
+const FASTGPT_API_KEY = 'fastgpt-wXTrB4ZQw6CvTeKdYjhTKxAuV4ANPnXvuR66j4YHioNdUmflnwbAwF75S2nqB'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
