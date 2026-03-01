@@ -6,7 +6,7 @@
                 <div v-if="isLoading" class="loading-overlay">
                     <div class="loading-content">
                         <n-spin :size="48" />
-                        <n-text depth="3" style="margin-top: 16px; font-size: 15px;">加载数据中...</n-text>
+                        <n-text depth="3" class="loading-text">加载数据中...</n-text>
                     </div>
                 </div>
 
@@ -38,7 +38,7 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NSpin, NText } from 'naive-ui'
-import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets, dataSets, checkAuth } from './stores/dataStore'
+import { state, currentTab, loadDataFromStorage, loadDataSet, currentDataSetId, fetchDatasets, dataSets, checkAuth, getPersistedCurrentDataSetId, getServerPreferredDataSetId } from './stores/dataStore'
 import UploadOverlay from './components/UploadOverlay.vue'
 import DataManager from './components/DataManager.vue'
 import AuthPage from './components/AuthPage.vue'
@@ -91,7 +91,14 @@ onMounted(async () => {
     try {
         await fetchDatasets()
         if (dataSets.value.length > 0) {
-            await loadDataSet(dataSets.value[0].id)
+            const serverPreferredId = await getServerPreferredDataSetId()
+            const persistedId = getPersistedCurrentDataSetId()
+            const targetDataSetId = serverPreferredId && dataSets.value.some(ds => ds.id === serverPreferredId)
+                ? serverPreferredId
+                : persistedId && dataSets.value.some(ds => ds.id === persistedId)
+                ? persistedId
+                : dataSets.value[0].id
+            await loadDataSet(targetDataSetId)
         }
     } catch (error) {
         console.error('从服务器获取数据集失败:', error)
@@ -141,5 +148,11 @@ function onBackFromDataManager() {
     flex-direction: column;
     align-items: center;
     gap: 4px;
+}
+
+.loading-text {
+    margin-top: 16px;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-medium);
 }
 </style>

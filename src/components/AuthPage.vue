@@ -136,14 +136,14 @@ async function handleSubmit(e) {
 
 .auth-header h2 {
     margin: 16px 0 8px;
-    font-size: 24px;
+    font-size: var(--text-5xl);
     color: #111827;
 }
 
 .subtitle {
     margin: 0;
     color: #6B7280;
-    font-size: 14px;
+    font-size: var(--text-base);
 }
 
 .auth-footer {
@@ -151,7 +151,7 @@ async function handleSubmit(e) {
     justify-content: center;
     gap: 8px;
     color: #6B7280;
-    font-size: 14px;
+    font-size: var(--text-base);
 }
 
 /* 移除输入框聚焦时的默认蓝色阴影 */
@@ -187,14 +187,14 @@ async function handleSubmit(e) {
 
 /* 优化表单错误提示样式 */
 :deep(.n-form-item-feedback__line) {
-    font-size: 12px;
+    font-size: var(--text-sm);
     line-height: 1.4;
     padding-top: 4px;
     color: var(--danger, #d03050); /* 稍微柔和一点的红色 */
 }
 
 :deep(.n-form-item-label) {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
 }
 </style>

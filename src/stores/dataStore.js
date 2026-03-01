@@ -1,6 +1,64 @@
 import { reactive, ref, computed } from 'vue'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const DATASET_SELECTION_KEY_PREFIX = 'insuranceDashboard:selectedDataset:'
+
+function getDatasetSelectionStorageKey() {
+    const username = state.user?.username || 'guest'
+    return `${DATASET_SELECTION_KEY_PREFIX}${username}`
+}
+
+function persistCurrentDataSetId(dataSetId) {
+    try {
+        const key = getDatasetSelectionStorageKey()
+        if (dataSetId) {
+            localStorage.setItem(key, dataSetId)
+        } else {
+            localStorage.removeItem(key)
+        }
+    } catch (error) {
+        console.error('持久化当前数据集失败:', error)
+    }
+}
+
+export function getPersistedCurrentDataSetId() {
+    try {
+        return localStorage.getItem(getDatasetSelectionStorageKey())
+    } catch (error) {
+        console.error('读取当前数据集失败:', error)
+        return null
+    }
+}
+
+async function syncCurrentDataSetIdToServer(dataSetId) {
+    if (!state.user?.username) return
+    try {
+        await fetch(`${API_BASE_URL}/users/${encodeURIComponent(state.user.username)}/preferences`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ preferredDataSetId: dataSetId || null })
+        })
+    } catch (error) {
+        console.error('同步当前数据集到服务端失败:', error)
+    }
+}
+
+export async function getServerPreferredDataSetId() {
+    if (!state.user?.username) return null
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(state.user.username)}/preferences`)
+        if (!response.ok) {
+            throw new Error('获取服务端偏好失败')
+        }
+        const data = await response.json()
+        return data.preferredDataSetId || null
+    } catch (error) {
+        console.error('读取服务端当前数据集失败:', error)
+        return null
+    }
+}
 
 // 子险种列表
 export const SUB_INSURANCES = [
@@ -13,6 +71,8 @@ export const state = reactive({
     insurances: [],
     companies: {},
     rawHtml: '',
+    rawHeaderLayout: [],
+    rawRows: [],
     isDataLoaded: false,
     user: null
 })
@@ -265,6 +325,8 @@ export function saveDataToStorage(dataSetName = null) {
             insurances: state.insurances,
             companies: state.companies,
             rawHtml: state.rawHtml,
+            rawHeaderLayout: state.rawHeaderLayout,
+            rawRows: state.rawRows,
             createdAt: new Date().toISOString()
         }
         
@@ -294,7 +356,7 @@ export function saveDataToStorage(dataSetName = null) {
 }
 
 // 方法：添加新数据集（不修改当前状态）
-export function addDataSet(dataSetName, insurances, companies, rawHtml) {
+export function addDataSet(dataSetName, insurances, companies, rawHtml, rawHeaderLayout = [], rawRows = []) {
     try {
         const dataSetId = Date.now().toString()
         const newDataSet = {
@@ -303,6 +365,8 @@ export function addDataSet(dataSetName, insurances, companies, rawHtml) {
             insurances: insurances,
             companies: companies,
             rawHtml: rawHtml,
+            rawHeaderLayout: rawHeaderLayout,
+            rawRows: rawRows,
             createdAt: new Date().toISOString()
         }
         
@@ -361,8 +425,12 @@ export function loadDataSet(dataSetId) {
             state.insurances = dataSet.insurances || []
             state.companies = dataSet.companies || {}
             state.rawHtml = dataSet.rawHtml || ''
+            state.rawHeaderLayout = dataSet.rawHeaderLayout || []
+            state.rawRows = dataSet.rawRows || []
             state.isDataLoaded = true
             currentDataSetId.value = dataSetId
+            persistCurrentDataSetId(dataSetId)
+            void syncCurrentDataSetIdToServer(dataSetId)
             if (state.insurances.length > 0) {
                 currentIns.value = state.insurances[0]
             }
@@ -386,9 +454,13 @@ export function deleteDataSet(dataSetId) {
                 state.insurances = []
                 state.companies = {}
                 state.rawHtml = ''
+                state.rawHeaderLayout = []
+                state.rawRows = []
                 state.isDataLoaded = false
                 currentDataSetId.value = null
                 currentIns.value = ''
+                persistCurrentDataSetId(null)
+                void syncCurrentDataSetIdToServer(null)
             }
             
             // 保存更新后的数据集列表
@@ -416,11 +488,15 @@ export function clearDataFromStorage() {
         state.insurances = []
         state.companies = {}
         state.rawHtml = ''
+        state.rawHeaderLayout = []
+        state.rawRows = []
         state.isDataLoaded = false
         focusCompanies.value = []
         currentIns.value = ''
         currentTab.value = 0
         selectedCompany.value = null
+        persistCurrentDataSetId(null)
+        void syncCurrentDataSetIdToServer(null)
     } catch (error) {
         console.error('清除数据失败:', error)
     }
@@ -488,9 +564,13 @@ export async function deleteDataSetFromServer(dataSetId) {
             state.insurances = []
             state.companies = {}
             state.rawHtml = ''
+            state.rawHeaderLayout = []
+            state.rawRows = []
             state.isDataLoaded = false
             currentDataSetId.value = null
             currentIns.value = ''
+            persistCurrentDataSetId(null)
+            void syncCurrentDataSetIdToServer(null)
         }
         
         return true

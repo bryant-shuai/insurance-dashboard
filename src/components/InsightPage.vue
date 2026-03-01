@@ -2,6 +2,12 @@
     <div class="page">
         <div class="chart-card" style="height: 100%;">
             <div class="insight-layout">
+                <div v-if="insightHighlights.length" class="insight-summary-strip">
+                    <div v-for="item in insightHighlights" :key="item.label" class="summary-pill">
+                        <span class="summary-label">{{ item.label }}</span>
+                        <span class="summary-value">{{ item.value }}</span>
+                    </div>
+                </div>
                 <div class="insight-grid">
 
                     <!-- ========== 左侧：市场份额矩形树图 ========== -->
@@ -147,7 +153,7 @@
                                     <!-- 微型方块 <3000: 仅名称 -->
                                     <template v-else>
                                         <div class="cell-header compact">
-                                            <span class="unit-name" style="font-size: 9px">{{ item.displayName }}</span>
+                                            <span class="unit-name" style="font-size: var(--text-3xs)">{{ item.displayName }}</span>
                                         </div>
                                     </template>
                                 </div>
@@ -177,67 +183,8 @@
                             市场竞争格局洞察
                         </div>
 
-                        <!-- 核心指标 -->
-                        <div class="insight-metrics" v-if="currentInsight">
-                            <div class="metric-item">
-                                <span class="label">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round"
-                                        style="margin-right: 4px; vertical-align: middle">
-                                        <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
-                                        <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
-                                        <line x1="6" y1="6" x2="6" y2="6"></line>
-                                        <line x1="6" y1="18" x2="6" y2="18"></line>
-                                    </svg>
-                                    市场规模
-                                </span>
-                                <span class="value">
-                                    {{ Math.round(currentInsight.total_premium).toLocaleString() }}
-                                </span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="label">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round"
-                                        style="margin-right: 4px; vertical-align: middle">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <circle cx="12" cy="12" r="6"></circle>
-                                        <circle cx="12" cy="12" r="2"></circle>
-                                    </svg>
-                                    集中度 (CR4)
-                                </span>
-                                <span :class="['value', currentInsight.cr4 > 60 ? 'high' : 'low']">
-                                    {{ currentInsight.cr4 }}%
-                                </span>
-                            </div>
-                        </div>
-
                         <!-- 市场集中度 -->
                         <div class="market-concentration" v-if="currentInsight">
-                            <div class="concentration-header">
-                                <span class="concentration-label">市场集中度</span>
-                                <span :class="[
-                                    'concentration-type',
-                                    {
-                                        'type-high': currentInsight.cr4 > 60,
-                                        'type-medium': currentInsight.cr4 > 30 && currentInsight.cr4 <= 60,
-                                        'type-low': currentInsight.cr4 <= 30
-                                    }
-                                ]">
-                                    {{ currentInsight.market_type }}
-                                </span>
-                            </div>
-
-                            <!-- CR4 解释卡片 -->
-                            <div class="concentration-explanation">
-                                <p class="explanation-text">
-                                    <strong>市场集中度(CR4)</strong>
-                                    衡量市场中前四大公司的份额总和。数值越高表示市场越集中，竞争程度相对较低；数值越低表示市场越分散，竞争更加激烈。
-                                </p>
-                            </div>
-
                             <!-- 集中度进度条 -->
                             <div class="concentration-bar-container">
                                 <div class="concentration-bar-bg">
@@ -331,6 +278,17 @@ const bcgMatrix = computed(() =>
 const summaryData = computed(() =>
     advancedAnalysisData.value?.summary
 )
+
+const insightHighlights = computed(() => {
+    if (!currentInsight.value) return []
+    const topCompany = currentInsight.value.top_companies?.[0]?.company?.split('-').pop() || '暂无'
+    return [
+        { label: '市场规模', value: `${Math.round(currentInsight.value.total_premium || 0).toLocaleString()} 万` },
+        { label: '集中度 CR4', value: `${currentInsight.value.cr4 ?? 0}%` },
+        { label: '竞争类型', value: currentInsight.value.market_type || '未知' },
+        { label: '头部公司', value: topCompany }
+    ]
+})
 
 // ============================================================
 // Treemap 数据处理
@@ -640,6 +598,39 @@ watch(
     flex: 1;
     overflow: hidden;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.insight-summary-strip {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 2px 4px;
+}
+
+.summary-pill {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.summary-label {
+    font-size: var(--text-xs);
+    color: #64748b;
+    font-weight: var(--weight-semibold);
+}
+
+.summary-value {
+    font-size: var(--text-base);
+    color: #0f172a;
+    font-weight: var(--weight-bold);
+    line-height: 1.2;
 }
 
 .insight-grid {
@@ -676,9 +667,9 @@ watch(
 
 /* --- 标题 --- */
 .card-title {
-    font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 15px;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
     color: #1e293b;
     margin-bottom: 20px;
     display: flex;
@@ -709,7 +700,7 @@ watch(
 }
 
 .treemap-legend-inline .legend-item {
-    font-size: 10px;
+    font-size: var(--text-2xs);
     color: #64748b;
     display: flex;
     align-items: center;
@@ -718,9 +709,9 @@ watch(
 }
 
 .treemap-legend-inline .legend-item .def {
-    font-size: 9px;
+    font-size: var(--text-3xs);
     opacity: .7;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
 }
 
 .legend-color {
@@ -745,7 +736,7 @@ watch(
     background: #f8fafc;
     border: 1px solid #f1f5f9;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: var(--text-md);
 }
 
 /* --- Treemap 卡片 --- */
@@ -828,9 +819,9 @@ watch(
 }
 
 .unit-name {
-    font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-sans);
     font-size: clamp(12px, 1.6vw, 16px);
-    font-weight: 800;
+    font-weight: var(--weight-extrabold);
     line-height: 1.2;
     white-space: nowrap;
     overflow: hidden;
@@ -844,9 +835,9 @@ watch(
 }
 
 .unit-rank {
-    font-family: 'Roboto Mono', 'SF Mono', Monaco, Consolas, monospace;
-    font-size: 9px;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-semibold);
     opacity: .85;
     flex-shrink: 0;
     background: linear-gradient(135deg, #fff3, #ffffff1a);
@@ -887,9 +878,9 @@ watch(
 }
 
 .efficiency-label {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 9px;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-bold);
     opacity: .8;
     text-transform: uppercase;
     letter-spacing: .8px;
@@ -900,8 +891,8 @@ watch(
 }
 
 .efficiency-value {
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-weight: 600;
+    font-family: var(--font-mono);
+    font-weight: var(--weight-semibold);
     font-size: clamp(12px, 1.6vw, 16px);
     line-height: 1.15;
     letter-spacing: -.02em;
@@ -914,9 +905,9 @@ watch(
 .cell-footer {
     display: flex;
     justify-content: space-between;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-sans);
     font-size: clamp(10px, 1.1vw, 13px);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     padding-top: 6px;
     border-top: 1px solid rgba(255, 255, 255, .25);
     margin-top: 6px;
@@ -926,9 +917,9 @@ watch(
 }
 
 .stat-label {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-sans);
     font-size: clamp(9px, .9vw, 11px);
-    font-weight: 800;
+    font-weight: var(--weight-extrabold);
     opacity: .8;
     text-transform: uppercase;
     letter-spacing: .6px;
@@ -974,18 +965,18 @@ watch(
 .metric-item .label {
     display: flex;
     align-items: center;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 13px;
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
     color: #64748b;
     margin-bottom: 6px;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     letter-spacing: -.01em;
 }
 
 .metric-item .value {
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 22px;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
     color: #0f172a;
     font-feature-settings: "tnum" 1, "kern" 1;
     letter-spacing: -.02em;
@@ -1010,17 +1001,17 @@ watch(
 }
 
 .concentration-label {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 12px;
-    font-weight: 700;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: #64748b;
     letter-spacing: -.01em;
 }
 
 .concentration-type {
-    font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 12px;
-    font-weight: 800;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-extrabold);
     padding: 5px 12px;
     border-radius: 20px;
     letter-spacing: .03em;
@@ -1041,17 +1032,17 @@ watch(
 }
 
 .explanation-text {
-    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 12px;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
     line-height: 1.5;
     color: #64748b;
     margin: 0;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .explanation-text strong {
     color: #1e293b;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
 }
 
 /* --- 集中度进度条 --- */
@@ -1078,9 +1069,9 @@ watch(
 }
 
 .concentration-value {
-    font-family: 'Fira Code', 'Courier New', monospace;
-    font-size: 12px;
-    font-weight: 700;
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: #fff;
     text-shadow: 0 2px 4px rgba(0, 0, 0, .5);
     letter-spacing: -.02em;
@@ -1097,7 +1088,7 @@ watch(
 
 .concentration-markers .marker {
     position: absolute;
-    font-size: 9px;
+    font-size: var(--text-3xs);
     color: #94a3b8;
     transform: translateX(-50%);
 }
@@ -1121,8 +1112,8 @@ watch(
 }
 
 .rank-header {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
     color: #1e293b;
     margin-bottom: 10px;
 }
@@ -1140,14 +1131,14 @@ watch(
 }
 
 .rank-num {
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: #64748b;
     width: 20px;
 }
 
 .rank-name {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: #1e293b;
     flex: 1;
     white-space: nowrap;
@@ -1170,8 +1161,8 @@ watch(
 }
 
 .rank-val {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     color: #475569;
     width: 40px;
     text-align: right;
@@ -1179,7 +1170,7 @@ watch(
 
 /* --- 分析文字 --- */
 .analysis-text {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: #64748b;
     line-height: 1.5;
     margin-top: 16px;
@@ -1193,9 +1184,9 @@ watch(
 }
 
 .company-name {
-    font-family: 'Fira Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    font-size: 12px;
-    font-weight: 800;
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-extrabold);
     color: #1e3a8a;
     letter-spacing: .03em;
     text-transform: uppercase;
@@ -1234,6 +1225,10 @@ watch(
 
 /* --- 响应式 --- */
 @media (max-width: 1200px) {
+    .insight-summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     .insight-grid {
         grid-template-columns: 1fr;
         gap: 16px;
@@ -1244,6 +1239,10 @@ watch(
 }
 
 @media (max-width: 768px) {
+    .insight-summary-strip {
+        grid-template-columns: 1fr;
+    }
+
     .card-title {
         flex-direction: column;
         align-items: flex-start;

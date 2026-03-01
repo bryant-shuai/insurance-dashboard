@@ -90,7 +90,7 @@ const chartOption = computed(() => {
                 const item = data[idx]
                 
                 return `
-                    <div style="font-weight: 600; margin-bottom: 8px; font-size: 14px; font-family: var(--font-sans); color: #111827;">${companyName}</div>
+                    <div style="font-weight: var(--weight-semibold); margin-bottom: 8px; font-size: var(--text-base); font-family: var(--font-sans); color: #111827;">${companyName}</div>
                     <div style="margin-bottom: 4px; font-family: var(--font-sans); color: #4B5563;">保费: <span style="color: ${mainParam.color}">${formatPremium(item.p)}</span></div>
                     <div style="font-family: var(--font-sans); color: #4B5563;">增速: <span style="color: ${item.g >= 0 ? '#10B981' : '#EF4444'}">${formatGrowth(item.g)}</span></div>
                 `
@@ -311,7 +311,7 @@ watch(focusCompanies, () => {
 }
 
 .chart-icon {
-    font-size: 24px;
+    font-size: var(--text-5xl);
     line-height: 1;
     font-family: var(--font-sans);
     display: flex;
@@ -324,8 +324,8 @@ watch(focusCompanies, () => {
 }
 
 .chart-title h3 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
     color: #111827;
     margin: 0;
     line-height: 1.3;
@@ -336,8 +336,8 @@ watch(focusCompanies, () => {
 
 .chart-title h3 .title-text {
     font-family: var(--font-sans);
-    font-weight: 700;
-    font-size: 18px;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-2xl);
     letter-spacing: 0;
 }
 
@@ -357,9 +357,9 @@ watch(focusCompanies, () => {
 }
 
 .chart-subtitle span {
-    font-size: 13px;
+    font-size: var(--text-md);
     color: #6B7280;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1.4;
     font-family: var(--font-sans);
 }
@@ -388,18 +388,18 @@ watch(focusCompanies, () => {
     }
     
     .chart-title h3 {
-        font-size: 15px;
+        font-size: var(--text-lg);
         font-family: var(--font-sans);
     }
 
     .chart-title h3 .title-text {
-        font-size: 15px;
+        font-size: var(--text-lg);
         font-family: var(--font-sans);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
     }
 
     .chart-icon {
-        font-size: 20px;
+        font-size: var(--text-3xl);
     }
 
     .chart-header {
@@ -418,21 +418,21 @@ watch(focusCompanies, () => {
     }
 
     .chart-title h3 {
-        font-size: 14px;
+        font-size: var(--text-base);
     }
 
     .chart-title h3 .title-text {
-        font-size: 14px;
+        font-size: var(--text-base);
         font-family: var(--font-sans);
-        font-weight: 700;
+        font-weight: var(--weight-bold);
     }
 
     .chart-icon {
-        font-size: 18px;
+        font-size: var(--text-2xl);
     }
 
     .chart-subtitle span {
-        font-size: 11px;
+        font-size: var(--text-xs);
     }
 }
 </style>

@@ -63,7 +63,7 @@ function selectInsurance(ins) {
     .filter-tag {
         flex-shrink: 0;
         padding: 8px 16px !important;
-        font-size: 13px !important;
+        font-size: var(--text-md) !important;
         white-space: nowrap;
     }
 }
@@ -75,7 +75,7 @@ function selectInsurance(ins) {
 
     .filter-tag {
         padding: 6px 12px !important;
-        font-size: 12px !important;
+        font-size: var(--text-sm) !important;
     }
 }
 </style>

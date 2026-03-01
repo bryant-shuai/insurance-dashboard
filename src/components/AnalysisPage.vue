@@ -199,7 +199,7 @@ const chartOption = computed(() => {
                 const gStr = formatGrowth(item.g)
                 
                 return `
-                    <div style="font-weight: 600; margin-bottom: 8px; font-size: 14px; font-family: var(--font-sans); color: #111827;">${item.name}</div>
+                    <div style="font-weight: var(--weight-semibold); margin-bottom: 8px; font-size: var(--text-base); font-family: var(--font-sans); color: #111827;">${item.name}</div>
                     <div style="margin-bottom: 4px; font-family: var(--font-sans); color: #4B5563;">保费: <span style="color: #4F46E5">${pStr}</span></div>
                     <div style="font-family: var(--font-sans); color: #4B5563;">增速: <span style="color: ${item.g >= 0 ? '#10B981' : '#EF4444'}">${gStr}</span></div>
                 `
@@ -404,22 +404,22 @@ const treemapChartOption = computed(() => {
                 const growthColor = d.growth >= 0 ? '#10b981' : '#ef4444'
                 
                 return `
-                    <div style="font-weight:bold;margin-bottom:8px;font-size:14px;color:#1e293b;border-bottom:1px solid #f1f5f9;padding-bottom:6px;">${d.name}</div>
+                    <div style="font-weight: var(--weight-bold);margin-bottom:8px;font-size: var(--text-base);color:#1e293b;border-bottom:1px solid #f1f5f9;padding-bottom:6px;">${d.name}</div>
                     <div style="display:flex;justify-content:space-between;gap:20px;margin-bottom:4px;">
-                        <span style="color:#64748b;font-size:12px;">保费规模:</span>
-                        <span style="color:#1e293b;font-weight:600;font-size:12px;">${Math.round(realPremium).toLocaleString()} 万</span>
+                        <span style="color:#64748b;font-size: var(--text-sm);">保费规模:</span>
+                        <span style="color:#1e293b;font-weight: var(--weight-semibold);font-size: var(--text-sm);">${Math.round(realPremium).toLocaleString()} 万</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;gap:20px;margin-bottom:4px;">
-                        <span style="color:#64748b;font-size:12px;">市场份额:</span>
-                        <span style="color:#1e293b;font-weight:600;font-size:12px;">${share}%</span>
+                        <span style="color:#64748b;font-size: var(--text-sm);">市场份额:</span>
+                        <span style="color:#1e293b;font-weight: var(--weight-semibold);font-size: var(--text-sm);">${share}%</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;gap:20px;margin-bottom:4px;">
-                        <span style="color:#64748b;font-size:12px;">增长速度:</span>
-                        <span style="color:${growthColor};font-weight:600;font-size:12px;">${growthStr}</span>
+                        <span style="color:#64748b;font-size: var(--text-sm);">增长速度:</span>
+                        <span style="color:${growthColor};font-weight: var(--weight-semibold);font-size: var(--text-sm);">${growthStr}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;gap:20px;">
-                        <span style="color:#64748b;font-size:12px;">竞争象限:</span>
-                        <span style="color:#4f46e5;font-weight:600;font-size:12px;">${d.quadrant}</span>
+                        <span style="color:#64748b;font-size: var(--text-sm);">竞争象限:</span>
+                        <span style="color:#4f46e5;font-weight: var(--weight-semibold);font-size: var(--text-sm);">${d.quadrant}</span>
                     </div>
                 `
             }
@@ -505,10 +505,10 @@ const bcgChartOption = computed(() => {
             formatter: (params) => {
                 const d = params.data
                 return `
-                    <div style="font-weight:bold;margin-bottom:5px;color:#1e293b">${d[3]}</div>
-                    <div style="font-size:12px;color:#64748b;margin-bottom:2px;">市场份额: <span style="color:#0f172a;font-weight:600">${d[0]}%</span></div>
-                    <div style="font-size:12px;color:#64748b;margin-bottom:2px;">同比增长: <span style="color:${d[1] >= 0 ? '#10b981' : '#ef4444'};font-weight:600">${d[1]}%</span></div>
-                    <div style="font-size:12px;color:#64748b">保费规模: <span style="color:#4f46e5;font-weight:600">${Math.round(d[2]).toLocaleString()}万</span></div>
+                    <div style="font-weight: var(--weight-bold);margin-bottom:5px;color:#1e293b">${d[3]}</div>
+                    <div style="font-size: var(--text-sm);color:#64748b;margin-bottom:2px;">市场份额: <span style="color:#0f172a;font-weight: var(--weight-semibold)">${d[0]}%</span></div>
+                    <div style="font-size: var(--text-sm);color:#64748b;margin-bottom:2px;">同比增长: <span style="color:${d[1] >= 0 ? '#10b981' : '#ef4444'};font-weight: var(--weight-semibold)">${d[1]}%</span></div>
+                    <div style="font-size: var(--text-sm);color:#64748b">保费规模: <span style="color:#4f46e5;font-weight: var(--weight-semibold)">${Math.round(d[2]).toLocaleString()}万</span></div>
                 `
             }
         },
@@ -633,8 +633,8 @@ watch(focusCompanies, async () => {
     height: 32px;
     display: flex;
     align-items: center;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
     color: #64748b;
     cursor: pointer;
     border-radius: 8px;
@@ -679,8 +679,8 @@ watch(focusCompanies, async () => {
 }
 
 .card-title {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
     color: #1e293b;
     margin-bottom: 16px;
     display: flex;
@@ -707,7 +707,7 @@ watch(focusCompanies, async () => {
 }
 
 .treemap-legend-inline .legend-item {
-    font-size: 10px;
+    font-size: var(--text-2xs);
     color: #64748b;
     display: flex;
     align-items: center;
@@ -716,9 +716,9 @@ watch(focusCompanies, async () => {
 }
 
 .treemap-legend-inline .legend-item .def {
-    font-size: 9px;
+    font-size: var(--text-3xs);
     opacity: 0.7;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
 }
 
 .icon-rocket, .icon-chart {
@@ -730,7 +730,7 @@ watch(focusCompanies, async () => {
     background: #f8fafc;
     border: 1px solid #f1f5f9;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: var(--text-md);
 }
 
 .treemap-card {
@@ -779,14 +779,14 @@ watch(focusCompanies, async () => {
 .metric-item .label {
     display: flex;
     align-items: center;
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: #64748b;
     margin-bottom: 4px;
 }
 
 .metric-item .value {
-    font-size: 18px;
-    font-weight: 800;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-extrabold);
     color: #1e293b;
 }
 
@@ -803,14 +803,14 @@ watch(focusCompanies, async () => {
 }
 
 .concentration-label {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     color: #64748b;
 }
 
 .concentration-type {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
     padding: 2px 8px;
     border-radius: 4px;
     background: #f1f5f9;
@@ -842,8 +842,8 @@ watch(focusCompanies, async () => {
 }
 
 .concentration-value {
-    font-size: 10px;
-    font-weight: 700;
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-bold);
     color: white;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
@@ -858,7 +858,7 @@ watch(focusCompanies, async () => {
 
 .concentration-markers .marker {
     position: absolute;
-    font-size: 9px;
+    font-size: var(--text-3xs);
     color: #94a3b8;
     transform: translateX(-50%);
 }
@@ -881,8 +881,8 @@ watch(focusCompanies, async () => {
 }
 
 .rank-header {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
     color: #1e293b;
     margin-bottom: 10px;
 }
@@ -902,14 +902,14 @@ watch(focusCompanies, async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
-    font-weight: 700;
+    font-size: var(--text-3xs);
+    font-weight: var(--weight-bold);
     color: #64748b;
 }
 
 .rank-name {
     width: 60px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: #475569;
     white-space: nowrap;
     overflow: hidden;
@@ -933,13 +933,13 @@ watch(focusCompanies, async () => {
 .rank-val {
     width: 35px;
     text-align: right;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     color: #1e293b;
 }
 
 .analysis-text {
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: #64748b;
     line-height: 1.5;
     margin-top: 10px;
@@ -1030,28 +1030,28 @@ watch(focusCompanies, async () => {
 }
 
 .chart-title span:first-child {
-    font-size: 24px;
+    font-size: var(--text-5xl);
     line-height: 1;
     font-family: var(--font-sans);
 }
 
 .company-name {
-    font-size: 16px;
-    font-weight: 800;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-extrabold);
     color: var(--primary);
     font-family: var(--font-sans);
     letter-spacing: -0.01em;
 }
 
 .title-separator {
-    font-size: 16px;
+    font-size: var(--text-xl);
     color: var(--text-tertiary);
-    font-weight: 400;
+    font-weight: var(--weight-regular);
 }
 
 .title-text {
-    font-size: 16px;
-    font-weight: 800;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-extrabold);
     color: var(--text-primary);
     font-family: var(--font-sans);
 }
@@ -1092,14 +1092,14 @@ watch(focusCompanies, async () => {
     border: none;
     background: transparent;
     outline: none;
-    font-size: 13px;
+    font-size: var(--text-md);
     color: var(--text-primary);
     width: 100%;
     padding: 0;
 }
 
 .dropdown-arrow {
-    font-size: 10px;
+    font-size: var(--text-2xs);
     color: var(--text-tertiary);
     cursor: pointer;
     margin-left: 6px;
@@ -1139,7 +1139,7 @@ watch(focusCompanies, async () => {
 
 .dropdown-item {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--text-md);
     cursor: pointer;
     transition: var(--transition-fast);
     color: var(--text-primary);
@@ -1158,9 +1158,9 @@ watch(focusCompanies, async () => {
 }
 
 .chart-subtitle span {
-    font-size: 13px;
+    font-size: var(--text-md);
     color: #6B7280;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1.4;
     font-family: var(--font-sans);
 }
@@ -1246,15 +1246,15 @@ watch(focusCompanies, async () => {
     justify-content: center;
     background: #E5E7EB;
     border-radius: 6px;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: #6B7280;
     font-family: var(--font-sans);
 }
 
 .name {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
     color: #374151;
     font-family: var(--font-sans);
 }
@@ -1265,16 +1265,16 @@ watch(focusCompanies, async () => {
 }
 
 .val-p {
-    font-size: 14px;
-    font-weight: 700;
+    font-size: var(--text-base);
+    font-weight: var(--weight-bold);
     color: #111827;
     margin-bottom: 4px;
     font-family: var(--font-sans);
 }
 
 .val-g {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
     font-family: var(--font-sans);
 }
 
@@ -1342,20 +1342,20 @@ watch(focusCompanies, async () => {
     }
     
     .name {
-        font-size: 13px;
+        font-size: var(--text-md);
     }
 
     .val-p {
-        font-size: 13px;
+        font-size: var(--text-md);
     }
 
     .val-g {
-        font-size: 11px;
+        font-size: var(--text-xs);
     }
 
     .chart-title .company-name,
     .chart-title .title-text {
-        font-size: 16px !important;
+        font-size: var(--text-xl) !important;
     }
 
     .analysis-layout > div:last-child {

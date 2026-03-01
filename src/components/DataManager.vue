@@ -578,8 +578,8 @@ function formatDate(isoStr) {
     align-items: center;
     gap: 10px;
     padding: 20px;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: var(--text-xl);
+    font-weight: var(--weight-semibold);
     color: var(--text-primary);
 }
 
@@ -604,8 +604,8 @@ function formatDate(isoStr) {
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--text-secondary);
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
 }
 
 .sidebar-nav-item:hover {
@@ -663,8 +663,8 @@ function formatDate(isoStr) {
 
 .dm-upload-btn,
 .dm-add-btn {
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
 }
 
 /* ===== Dataset List ===== */
@@ -752,8 +752,8 @@ function formatDate(isoStr) {
 }
 
 .dm-name-text {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
     color: var(--text-primary);
     cursor: text;
     white-space: nowrap;
@@ -774,8 +774,8 @@ function formatDate(isoStr) {
 }
 
 .dm-current-tag {
-    font-weight: 500;
-    font-size: 12px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-sm);
     flex-shrink: 0;
 }
 
@@ -783,7 +783,7 @@ function formatDate(isoStr) {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
 }
 
@@ -812,8 +812,8 @@ function formatDate(isoStr) {
 }
 
 .dm-action-btn {
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
 }
 
 .dm-use-btn {
@@ -825,8 +825,8 @@ function formatDate(isoStr) {
 }
 
 .dm-using-tag {
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
     padding: 0 12px;
     height: 32px;
 }
@@ -853,15 +853,15 @@ function formatDate(isoStr) {
 }
 
 .dm-empty :deep(.n-empty__description) {
-    font-size: 15px;
+    font-size: var(--text-lg);
     color: var(--text-secondary);
     margin-top: 8px;
 }
 
 .dm-empty-btn {
     margin-top: 16px;
-    font-weight: 600;
-    font-size: 14px;
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
 }
 
 /* ===== User Table ===== */
@@ -870,8 +870,8 @@ function formatDate(isoStr) {
 }
 
 .dm-user-table :deep(.n-data-table-th) {
-    font-weight: 700;
-    font-size: 13px;
+    font-weight: var(--weight-bold);
+    font-size: var(--text-md);
     color: var(--text-secondary);
     background: var(--bg-subtle);
     text-transform: uppercase;
@@ -879,14 +879,14 @@ function formatDate(isoStr) {
 }
 
 .dm-user-table :deep(.n-data-table-td) {
-    font-size: 14px;
+    font-size: var(--text-base);
     padding: 14px 16px;
 }
 
 /* 用户表格操作按钮字体统一 */
 .dm-user-table :deep(.n-button) {
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
 }
 
 /* ===== Auth Modal (与登录页保持一致) ===== */
@@ -918,15 +918,15 @@ function formatDate(isoStr) {
 
 .auth-header-modal h2 {
     margin: 16px 0 8px;
-    font-size: 24px;
+    font-size: var(--text-5xl);
     color: #111827;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 
 .auth-header-modal .subtitle {
     margin: 0;
     color: #6B7280;
-    font-size: 14px;
+    font-size: var(--text-base);
 }
 
 .auth-modal-footer {
@@ -938,8 +938,8 @@ function formatDate(isoStr) {
 
 .auth-modal-footer .n-button {
     min-width: 100px;
-    font-weight: 500;
-    font-size: 14px;
+    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
 }
 
 /* 移除输入框聚焦时的默认蓝色阴影 */
@@ -964,15 +964,15 @@ function formatDate(isoStr) {
 
 /* 优化表单错误提示样式 */
 .auth-card-modal :deep(.n-form-item-feedback__line) {
-    font-size: 12px;
+    font-size: var(--text-sm);
     line-height: 1.4;
     padding-top: 4px;
     color: var(--danger, #d03050);
 }
 
 .auth-card-modal :deep(.n-form-item-label) {
-    font-size: 14px;
-    font-weight: 500;
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
 }
 
 
@@ -1061,7 +1061,7 @@ function formatDate(isoStr) {
     }
 
     .dm-action-btn {
-        font-size: 12px;
+        font-size: var(--text-sm);
     }
 }
 </style>

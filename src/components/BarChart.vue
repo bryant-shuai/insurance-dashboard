@@ -256,13 +256,13 @@ onUnmounted(() => { if (chartInstance) chartInstance.destroy() })
 }
 
 .chart-icon {
-    font-size: 24px;
+    font-size: var(--text-5xl);
     line-height: 1;
 }
 
 .chart-title h3 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
     color: #111827;
     margin: 0;
     line-height: 1.3;
@@ -283,9 +283,9 @@ onUnmounted(() => { if (chartInstance) chartInstance.destroy() })
 }
 
 .chart-subtitle span {
-    font-size: 13px;
+    font-size: var(--text-md);
     color: #6B7280;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1.4;
 }
 
@@ -305,7 +305,7 @@ onUnmounted(() => { if (chartInstance) chartInstance.destroy() })
     }
     
     .chart-title h3 {
-        font-size: 16px;
+        font-size: var(--text-xl);
     }
 }
 

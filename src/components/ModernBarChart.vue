@@ -196,13 +196,13 @@ function handleBarClick(item) {
 }
 
 .chart-icon {
-    font-size: 24px;
+    font-size: var(--text-5xl);
     line-height: 1;
 }
 
 .chart-title h3 {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
     color: #111827;
     margin: 0;
     line-height: 1.3;
@@ -223,9 +223,9 @@ function handleBarClick(item) {
 }
 
 .chart-subtitle span {
-    font-size: 13px;
+    font-size: var(--text-md);
     color: #6B7280;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1.4;
 }
 
@@ -259,9 +259,9 @@ function handleBarClick(item) {
 }
 
 .tick-label {
-    font-size: 11px;
+    font-size: var(--text-xs);
     color: #6B7280;
-    font-weight: 400;
+    font-weight: var(--weight-regular);
     line-height: 1;
 }
 
@@ -354,16 +354,16 @@ function handleBarClick(item) {
 }
 
 .main-value {
-    font-size: 12px;
-    font-weight: 700;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
     color: #111827;
     line-height: 1.2;
     margin-bottom: 4px;
 }
 
 .growth-value {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
     line-height: 1;
 }
 
@@ -377,8 +377,8 @@ function handleBarClick(item) {
 
 .bar-label {
     margin-top: 12px;
-    font-size: 12px;
-    font-weight: 500;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
     color: #4B5563;
     text-align: center;
     line-height: 1.2;
@@ -401,15 +401,15 @@ function handleBarClick(item) {
     }
     
     .bar-label {
-        font-size: 11px;
+        font-size: var(--text-xs);
     }
     
     .main-value {
-        font-size: 11px;
+        font-size: var(--text-xs);
     }
     
     .growth-value {
-        font-size: 10px;
+        font-size: var(--text-2xs);
     }
 }
 
@@ -427,7 +427,7 @@ function handleBarClick(item) {
     }
     
     .bar-label {
-        font-size: 10px;
+        font-size: var(--text-2xs);
         margin-top: 8px;
     }
 }

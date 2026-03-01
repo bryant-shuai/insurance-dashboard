@@ -5,8 +5,6 @@ import { createRequire } from 'module'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 
 const require = createRequire(import.meta.url)
 const XLSX = require('xlsx')

@@ -1,14 +1,14 @@
 /* ===== Design System: BI/Analytics Dashboard ===== */
 /* Inspired by modern data platforms — clean, spacious, data-first */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600;700&display=swap');
 
 :root {
     /* Primary Palette - Professional Blue (from Design System) */
     --primary: #1E40AF;
     --primary-hover: #1E3A8A;
-    --primary-light: #EEF2FF;
-    --primary-subtle: #BFDBFE;
+    --primary-light: #E8EDFF;
+    --primary-subtle: #C7D2FE;
 
     /* Accent - Amber for CTA (from Design System) */
     --accent: #F59E0B;
@@ -30,7 +30,7 @@
     --text-inverse: #FFFFFF;
 
     /* Surfaces */
-    --bg-app: #F8FAFC;
+    --bg-app: linear-gradient(180deg, #F6F8FC 0%, #F8FAFC 45%, #F3F7FF 100%);
     --bg-card: #FFFFFF;
     --bg-elevated: #FFFFFF;
     --bg-muted: #F1F5F9;
@@ -46,11 +46,11 @@
     --radius-md: 10px;
     --radius-lg: 14px;
     --radius-xl: 18px;
-    --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.03), 0 1px 3px 0 rgba(0,0,0,0.06);
-    --shadow-md: 0 2px 4px -1px rgba(0,0,0,0.04), 0 4px 6px -1px rgba(0,0,0,0.06);
-    --shadow-lg: 0 4px 6px -2px rgba(0,0,0,0.03), 0 10px 15px -3px rgba(0,0,0,0.08);
-    --shadow-xl: 0 10px 25px -5px rgba(0,0,0,0.08), 0 20px 40px -10px rgba(0,0,0,0.06);
-    --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.12);
+    --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 4px 14px rgba(15, 23, 42, 0.08);
+    --shadow-lg: 0 10px 24px rgba(15, 23, 42, 0.12);
+    --shadow-xl: 0 18px 36px rgba(15, 23, 42, 0.16);
+    --shadow-glow: 0 0 0 rgba(79, 70, 229, 0);
 
     /* Transitions */
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -66,6 +66,31 @@
     /* Typography - Inter for modern UI, Fira Code for data */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Fira Code', 'Courier New', monospace;
+
+    /* Typography Scale */
+    --text-3xs: 9px;
+    --text-2xs: 10px;
+    --text-xs: 11px;
+    --text-sm: 12px;
+    --text-md: 13px;
+    --text-base: 14px;
+    --text-lg: 15px;
+    --text-xl: 16px;
+    --text-2xl: 18px;
+    --text-3xl: 20px;
+    --text-4xl: 22px;
+    --text-5xl: 24px;
+
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-semibold: 600;
+    --weight-bold: 700;
+    --weight-extrabold: 800;
+
+    --leading-tight: 1.2;
+    --leading-snug: 1.35;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.6;
 }
 
 /* ===== Reset & Base ===== */
@@ -76,7 +101,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: var(--text-xl);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -84,11 +109,30 @@ html {
 
 body {
     font-family: var(--font-sans);
+    font-size: var(--text-base);
+    font-weight: var(--weight-regular);
     background: var(--bg-app);
     color: var(--text-primary);
-    line-height: 1.6;
+    line-height: var(--leading-relaxed);
     min-height: 100vh;
     padding: 0;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+.n-button,
+.n-input,
+.n-base-selection,
+.n-select,
+.n-tag,
+.n-text,
+.n-data-table {
+    font-family: var(--font-sans);
 }
 
 #app {
@@ -127,24 +171,26 @@ body {
 
 /* ===== Typography ===== */
 h1, h2, h3, h4, h5, h6 {
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: -0.02em;
     color: var(--text-primary);
 }
 
 /* ===== Navbar ===== */
 .top-navbar {
-    background: var(--bg-card);
+    background: rgba(255, 255, 255, 0.94);
     padding: clamp(10px, 1.2vw, 16px) clamp(16px, 2vw, 32px);
-    border-bottom: 1px solid var(--border-light);
+    border: 1px solid var(--border-light);
+    border-top: 0;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(12px);
-    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-sm);
 }
 
 .nav-brand {
@@ -155,7 +201,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-title {
     font-size: clamp(14px, 1.2vw, 20px);
-    font-weight: 800;
+    font-weight: var(--weight-extrabold);
     color: var(--text-primary);
     display: flex;
     align-items: center;
@@ -173,22 +219,22 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .version-badge {
-    font-size: 11px;
+    font-size: var(--text-xs);
     background: var(--primary-light);
     color: var(--primary);
     padding: 2px 10px;
     border-radius: 100px;
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     letter-spacing: 0.02em;
 }
 
 .data-badge {
     background: var(--success-bg);
     color: var(--success);
-    font-size: 11px;
+    font-size: var(--text-xs);
     padding: 2px 10px;
     border-radius: 100px;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     max-width: 180px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -197,7 +243,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-menu {
     display: flex;
-    background: var(--bg-muted);
+    background: #EEF2FF;
     padding: 3px;
     border-radius: var(--radius-md);
     gap: 2px;
@@ -207,7 +253,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: clamp(6px, 0.6vw, 8px) clamp(14px, 1.6vw, 28px);
     border-radius: calc(var(--radius-md) - 2px);
     font-size: clamp(12px, 0.85vw, 14px);
-    font-weight: 500;
+    font-weight: var(--weight-semibold);
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition-normal);
@@ -217,8 +263,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-item:hover {
-    color: var(--text-primary);
-    background: rgba(255,255,255,0.6);
+    color: var(--primary);
+    background: rgba(255,255,255,0.7);
 }
 
 .nav-item:focus-visible {
@@ -227,9 +273,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .nav-item.active {
-    background: var(--bg-card);
+    background: #FFFFFF;
     color: var(--primary);
-    box-shadow: var(--shadow-sm);
+    box-shadow: inset 0 0 0 1px rgba(30, 64, 175, 0.12), var(--shadow-sm);
 }
 
 .nav-actions {
@@ -244,7 +290,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: clamp(6px, 0.6vw, 10px) clamp(12px, 1.2vw, 20px);
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     font-size: clamp(12px, 0.82vw, 14px);
     transition: var(--transition-normal);
     display: flex;
@@ -264,9 +310,8 @@ h1, h2, h3, h4, h5, h6 {
     outline-offset: 2px;
 }
 
-/* Naive UI按钮3D立体感增强样式 - 完全匹配生产环境 */
+/* Naive UI按钮统一风格 */
 .manage-btn.enhanced-button.coordinated-button {
-    /* 保持Naive UI的基础样式 */
     --n-color: #1E40AF;
     --n-color-hover: #1E3A8A;
     --n-color-pressed: #1E3A8A;
@@ -280,47 +325,30 @@ h1, h2, h3, h4, h5, h6 {
     --n-border-pressed: 1px solid #1E3A8A;
     --n-border-focus: 1px solid #1E3A8A;
     --n-height: 38px;
-    --n-font-size: 14px;
-    --n-font-weight: 600;
+    --n-font-size: var(--text-base);
+    --n-font-weight: var(--weight-semibold);
     --n-padding: 0 20px;
     --n-icon-size: 18px;
     --n-border-radius: 10px;
-    
-    /* 3D立体感核心效果 */
-    background: linear-gradient(135deg, #1E40AF 0%, #1E3A8A 100%) !important;
-    box-shadow: 
-        0 4px 15px rgba(30, 64, 175, 0.4),           /* 主投影 */
-        0 2px 6px rgba(30, 64, 175, 0.3),            /* 近距离投影 */
-        inset 0 1px 2px rgba(255, 255, 255, 0.3),    /* 顶部高光 */
-        inset 0 -1px 2px rgba(0, 0, 0, 0.2);         /* 底部阴影 */
+
+    background: #1E40AF !important;
+    box-shadow: 0 6px 14px rgba(30, 64, 175, 0.22);
     position: relative;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    /* 棱角效果增强 */
-    border: 2px solid #1E3A8A !important;
-    border-bottom-width: 3px !important;
-    border-right-width: 3px !important;
-    overflow: hidden; /* 防止伪元素溢出 */
+    transition: all 0.2s ease;
+    border: 1px solid #1E3A8A !important;
+    overflow: hidden;
 }
 
 .manage-btn.enhanced-button.coordinated-button:hover {
-    background: linear-gradient(135deg, #1E3A8A 0%, #1D4ED8 100%) !important;
-    transform: translateY(-2px);
-    box-shadow: 
-        0 6px 20px rgba(30, 64, 175, 0.5),
-        0 4px 12px rgba(30, 64, 175, 0.4),
-        inset 0 1px 3px rgba(255, 255, 255, 0.4),
-        inset 0 -1px 3px rgba(0, 0, 0, 0.25);
+    background: #1E3A8A !important;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.26);
 }
 
 .manage-btn.enhanced-button.coordinated-button:active {
-    background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%) !important;
+    background: #1E3A8A !important;
     transform: translateY(0);
-    box-shadow: 
-        0 2px 8px rgba(30, 64, 175, 0.3),
-        0 1px 4px rgba(30, 64, 175, 0.2),
-        inset 0 1px 1px rgba(255, 255, 255, 0.2),
-        inset 0 -1px 1px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(30, 64, 175, 0.2);
 }
 
 .manage-btn.enhanced-button.coordinated-button:focus-visible {
@@ -328,7 +356,7 @@ h1, h2, h3, h4, h5, h6 {
     outline-offset: 2px;
 }
 
-/* 添加光泽扫过效果 */
+/* 轻量 hover 高光 */
 .manage-btn.enhanced-button.coordinated-button::before {
     content: '';
     position: absolute;
@@ -337,27 +365,14 @@ h1, h2, h3, h4, h5, h6 {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transition: left 0.6s;
+    transition: left 0.4s;
     border-radius: 8px;
     pointer-events: none; /* 关键修复：防止伪元素拦截鼠标事件 */
-    z-index: 1; /* 确保在内容之下但在背景之上 */
+    z-index: 1;
 }
 
 .manage-btn.enhanced-button.coordinated-button:hover::before {
     left: 100%;
-}
-
-/* 移除之前自定义按钮样式 */
-.production-button,
-.button-icon,
-.button-text {
-    display: none !important;
-}
-
-/* 移除之前的相关样式以避免冲突 */
-.production-button,
-.button-text {
-    display: none !important;
 }
 
 .coordinated-button::before {
@@ -376,9 +391,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .coordinated-button:hover {
-    background: linear-gradient(135deg, var(--primary-hover) 0%, #1D4ED8 100%) !important;
-    box-shadow: 0 6px 16px rgba(30, 64, 175, 0.3), 0 0 0 4px rgba(30, 64, 175, 0.1) !important;
-    transform: translateY(-2px) !important;
+    background: var(--primary-hover) !important;
+    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.26) !important;
+    transform: translateY(-1px) !important;
     border-color: var(--primary-hover) !important;
 }
 
@@ -420,7 +435,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .filter-label {
     font-size: clamp(11px, 0.78vw, 13px);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     color: var(--text-secondary);
     margin-bottom: 10px;
     display: block;
@@ -443,7 +458,7 @@ h1, h2, h3, h4, h5, h6 {
     cursor: pointer;
     transition: var(--transition-fast);
     background: var(--bg-card);
-    font-weight: 500;
+    font-weight: var(--weight-medium);
 }
 
 .filter-tag:hover {
@@ -466,7 +481,7 @@ h1, h2, h3, h4, h5, h6 {
     padding: 8px 14px;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-md);
-    font-size: 13px;
+    font-size: var(--text-md);
     background: var(--bg-card);
     cursor: pointer;
     display: flex;
@@ -516,7 +531,7 @@ h1, h2, h3, h4, h5, h6 {
     border: none;
     border-bottom: 1px solid var(--border-light);
     outline: none;
-    font-size: 13px;
+    font-size: var(--text-md);
     position: sticky;
     top: 0;
     background: var(--bg-card);
@@ -529,7 +544,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .dropdown-item {
     padding: 10px 14px;
-    font-size: 13px;
+    font-size: var(--text-md);
     cursor: pointer;
     transition: var(--transition-fast);
     color: var(--text-primary);
@@ -553,8 +568,8 @@ h1, h2, h3, h4, h5, h6 {
     border: 1px solid var(--danger-border);
     padding: 2px 10px;
     border-radius: 100px;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -564,7 +579,7 @@ h1, h2, h3, h4, h5, h6 {
 .chip span {
     cursor: pointer;
     opacity: 0.6;
-    font-size: 14px;
+    font-size: var(--text-base);
     line-height: 1;
 }
 
@@ -602,6 +617,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .chart-card:hover {
     box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
 }
 
 .chart-header {
@@ -615,7 +631,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .chart-title {
     font-size: clamp(13px, 1vw, 16px);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     letter-spacing: -0.01em;
 }
@@ -709,8 +725,8 @@ h1, h2, h3, h4, h5, h6 {
     height: 22px;
     background: var(--bg-muted);
     border-radius: 6px;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-extrabold);
     color: var(--text-tertiary);
     display: flex;
     align-items: center;
@@ -742,7 +758,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .item-left .name {
     font-size: clamp(12px, 0.82vw, 14px);
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
@@ -756,7 +772,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .val-p {
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     font-family: var(--font-mono);
     font-size: clamp(12px, 0.82vw, 14px);
     color: var(--text-primary);
@@ -764,9 +780,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .val-g {
-    font-size: 11px;
+    font-size: var(--text-xs);
     margin-top: 1px;
-    font-weight: 600;
+    font-weight: var(--weight-semibold);
 }
 
 .val-g.pos { color: var(--success); }
@@ -824,7 +840,7 @@ h1, h2, h3, h4, h5, h6 {
 .table-box tr:nth-child(2) td,
 .table-box tr:nth-child(3) td {
     background: var(--bg-elevated);
-    font-weight: 700;
+    font-weight: var(--weight-bold);
     color: var(--text-primary);
     text-align: center;
     position: -webkit-sticky;
@@ -983,7 +999,7 @@ h1, h2, h3, h4, h5, h6 {
     }
 
     .table-box {
-        font-size: 12px;
+        font-size: var(--text-sm);
     }
 
     .table-box th,

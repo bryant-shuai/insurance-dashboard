@@ -1,325 +1,893 @@
+<script setup>
+import { computed, ref, watch } from 'vue'
+import { state } from '../stores/dataStore'
+
+const HEADER_ROW_HEIGHT = 38
+const ALL_GROUP_KEY = '__all__'
+const ALL_MODE_REGION_WIDTH = 96
+const ALL_MODE_COMPANY_WIDTH = 132
+const GROUP_MODE_REGION_WIDTH = 88
+const GROUP_MODE_COMPANY_WIDTH = 118
+const GROUP_MODE_METRIC_WIDTH = 112
+
+const density = ref('compact')
+const selectedGroup = ref(ALL_GROUP_KEY)
+const sortState = ref({
+    colPosition: null,
+    direction: null
+})
+
+function normalizeText(value) {
+    if (value === undefined || value === null) return ''
+    return String(value).trim()
+}
+
+function isMetricLabel(label) {
+    const text = normalizeText(label)
+    if (!text) return false
+    return ['本期累计', '上年同期', '同比增长', '增量保费', '增量'].some(keyword => text.includes(keyword))
+}
+
+function looksLikeReportTitle(label) {
+    const text = normalizeText(label)
+    if (!text) return false
+    return text.length >= 10 && ['报表', '统计', '快报', '主体', '分险种'].some(keyword => text.includes(keyword))
+}
+
+function deriveGroupAndMetric(labels) {
+    const cleaned = (labels || []).map(normalizeText).filter(Boolean)
+    if (!cleaned.length) return { group: '', metric: '' }
+
+    let metric = ''
+    for (let i = cleaned.length - 1; i >= 0; i--) {
+        if (isMetricLabel(cleaned[i])) {
+            metric = cleaned[i]
+            break
+        }
+    }
+    if (!metric) metric = cleaned[cleaned.length - 1]
+
+    if (!isMetricLabel(metric)) {
+        return { group: metric, metric }
+    }
+
+    let group = ''
+    const metricIndex = cleaned.lastIndexOf(metric)
+    for (let i = metricIndex - 1; i >= 0; i--) {
+        const label = cleaned[i]
+        if (!label || isMetricLabel(label) || label === metric) continue
+        group = label
+        break
+    }
+
+    if (!group) {
+        group = cleaned.find(label => !isMetricLabel(label)) || metric
+    }
+
+    if (looksLikeReportTitle(group)) {
+        const fallback = cleaned.find(label => !looksLikeReportTitle(label) && !isMetricLabel(label))
+        if (fallback) group = fallback
+    }
+
+    return { group, metric }
+}
+
+function getHeaderColumnCount(layout) {
+    if (!Array.isArray(layout) || layout.length === 0) return 0
+    return layout.reduce((max, row) => {
+        const count = (row || []).reduce((sum, cell) => sum + (Number(cell?.colspan) || 1), 0)
+        return Math.max(max, count)
+    }, 0)
+}
+
+function buildHeaderGrid(layout, colCount) {
+    if (!Array.isArray(layout) || layout.length === 0 || colCount <= 0) return []
+
+    const rowCount = layout.length
+    const grid = Array.from({ length: rowCount }, () => Array(colCount).fill(''))
+
+    for (let r = 0; r < rowCount; r++) {
+        const cells = layout[r] || []
+        let c = 0
+
+        for (const cell of cells) {
+            while (c < colCount && grid[r][c]) {
+                c += 1
+            }
+            if (c >= colCount) break
+
+            const text = normalizeText(cell?.text)
+            const rowspan = Number(cell?.rowspan) || 1
+            const colspan = Number(cell?.colspan) || 1
+
+            for (let rr = r; rr < Math.min(rowCount, r + rowspan); rr++) {
+                for (let cc = c; cc < Math.min(colCount, c + colspan); cc++) {
+                    grid[rr][cc] = text
+                }
+            }
+
+            c += colspan
+        }
+    }
+
+    return grid
+}
+
+function annotateHeaderCells(rows) {
+    const sourceRows = rows || []
+    const occupiedRows = []
+
+    return sourceRows.map(row => {
+        for (let i = 0; i < occupiedRows.length; i++) {
+            if (occupiedRows[i] > 0) {
+                occupiedRows[i] -= 1
+            }
+        }
+
+        const resultRow = []
+        let cursor = 0
+
+        for (const cell of row || []) {
+            while (occupiedRows[cursor] > 0) {
+                cursor += 1
+            }
+
+            const rowspan = Number(cell?.rowspan) || 1
+            const colspan = Number(cell?.colspan) || 1
+
+            resultRow.push({
+                text: normalizeText(cell?.text),
+                rowspan,
+                colspan,
+                colStart: cursor
+            })
+
+            for (let spanIndex = 0; spanIndex < colspan; spanIndex++) {
+                occupiedRows[cursor + spanIndex] = Math.max(occupiedRows[cursor + spanIndex] || 0, rowspan)
+            }
+
+            cursor += colspan
+        }
+
+        return resultRow
+    })
+}
+
+function buildProjectedHeaderLayout(headerGrid, selectedIndices) {
+    if (!Array.isArray(headerGrid) || !headerGrid.length || !selectedIndices.length) return []
+
+    const projected = headerGrid.map(row => selectedIndices.map(index => normalizeText(row?.[index])))
+    const rowCount = projected.length
+    const colCount = selectedIndices.length
+    const visited = Array.from({ length: rowCount }, () => Array(colCount).fill(false))
+    const result = []
+
+    for (let r = 0; r < rowCount; r++) {
+        const rowCells = []
+        for (let c = 0; c < colCount; c++) {
+            if (visited[r][c]) continue
+
+            const text = projected[r][c] || ''
+            let colspan = 1
+            while (
+                c + colspan < colCount &&
+                !visited[r][c + colspan] &&
+                projected[r][c + colspan] === text
+            ) {
+                colspan += 1
+            }
+
+            let rowspan = 1
+            let canExpand = true
+            while (r + rowspan < rowCount && canExpand) {
+                for (let cc = c; cc < c + colspan; cc++) {
+                    if (visited[r + rowspan][cc] || projected[r + rowspan][cc] !== text) {
+                        canExpand = false
+                        break
+                    }
+                }
+                if (canExpand) rowspan += 1
+            }
+
+            for (let rr = r; rr < r + rowspan; rr++) {
+                for (let cc = c; cc < c + colspan; cc++) {
+                    visited[rr][cc] = true
+                }
+            }
+
+            rowCells.push({ text, rowspan, colspan, colStart: c })
+        }
+        result.push(rowCells)
+    }
+
+    return result
+}
+
+const legacyTableData = computed(() => {
+    if (!state.rawHtml) {
+        return { headerLayout: [], rows: [] }
+    }
+
+    try {
+        const parser = new DOMParser()
+        const doc = parser.parseFromString(state.rawHtml, 'text/html')
+        const table = doc.querySelector('table')
+        if (!table) return { headerLayout: [], rows: [] }
+
+        const allRows = Array.from(table.querySelectorAll('tr'))
+        if (!allRows.length) return { headerLayout: [], rows: [] }
+
+        const headerRowCount = Math.min(3, allRows.length)
+        const headerLayout = allRows.slice(0, headerRowCount).map(row => {
+            const cells = Array.from(row.querySelectorAll('td, th'))
+            return cells.map(cell => ({
+                text: normalizeText(cell.textContent),
+                rowspan: Number(cell.getAttribute('rowspan') || 1),
+                colspan: Number(cell.getAttribute('colspan') || 1)
+            }))
+        })
+
+        const rows = allRows.slice(headerRowCount).map(row => {
+            return Array.from(row.querySelectorAll('td, th')).map(cell => normalizeText(cell.textContent))
+        })
+
+        return { headerLayout, rows }
+    } catch (error) {
+        console.error('解析历史 rawHtml 失败:', error)
+        return { headerLayout: [], rows: [] }
+    }
+})
+
+const headerLayout = computed(() => {
+    if (Array.isArray(state.rawHeaderLayout) && state.rawHeaderLayout.length > 0) {
+        return state.rawHeaderLayout
+    }
+    return legacyTableData.value.headerLayout
+})
+
+const tableRows = computed(() => {
+    if (Array.isArray(state.rawRows) && state.rawRows.length > 0) {
+        return state.rawRows
+    }
+    return legacyTableData.value.rows
+})
+
+const totalColumnCount = computed(() => {
+    const rowMax = tableRows.value.reduce((max, row) => Math.max(max, Array.isArray(row) ? row.length : 0), 0)
+    const headerMax = getHeaderColumnCount(headerLayout.value)
+    return Math.max(rowMax, headerMax)
+})
+
+const normalizedRows = computed(() => {
+    const colCount = totalColumnCount.value
+    return tableRows.value.map(row => Array.from({ length: colCount }, (_, idx) => normalizeText(row?.[idx])))
+})
+
+const headerGrid = computed(() => {
+    return buildHeaderGrid(headerLayout.value, totalColumnCount.value)
+})
+
+const columnMeta = computed(() => {
+    const colCount = totalColumnCount.value
+    if (colCount === 0) return []
+
+    return Array.from({ length: colCount }, (_, index) => {
+        const labels = headerGrid.value
+            .map(row => normalizeText(row?.[index]))
+            .filter(Boolean)
+        const { group, metric } = deriveGroupAndMetric(labels)
+
+        return {
+            index,
+            group: group || `列${index + 1}`,
+            metric: metric || group || `列${index + 1}`
+        }
+    })
+})
+
+const regionColIndex = computed(() => {
+    const idx = columnMeta.value.findIndex(col => col.group.includes('地区'))
+    return idx >= 0 ? idx : 0
+})
+
+const companyColIndex = computed(() => {
+    const idx = columnMeta.value.findIndex(col => col.group.includes('公司'))
+    if (idx >= 0) return idx
+    return regionColIndex.value === 0 ? 1 : 0
+})
+
+const baseColumnIndices = computed(() => {
+    return Array.from(new Set([regionColIndex.value, companyColIndex.value]))
+        .filter(index => index >= 0 && index < totalColumnCount.value)
+        .sort((a, b) => a - b)
+})
+
+const insuranceGroups = computed(() => {
+    const baseSet = new Set(baseColumnIndices.value)
+    const groups = []
+
+    for (const col of columnMeta.value) {
+        if (baseSet.has(col.index)) continue
+        if (!col.group || isMetricLabel(col.group)) continue
+        if (!groups.includes(col.group)) groups.push(col.group)
+    }
+
+    return groups
+})
+
+watch(insuranceGroups, groups => {
+    if (selectedGroup.value === ALL_GROUP_KEY) return
+    if (!groups.includes(selectedGroup.value)) {
+        selectedGroup.value = ALL_GROUP_KEY
+    }
+}, { immediate: true })
+
+function getGroupColumnIndices(groupName) {
+    if (!groupName) return []
+    const baseSet = new Set(baseColumnIndices.value)
+    return columnMeta.value
+        .filter(col => !baseSet.has(col.index) && col.group === groupName)
+        .map(col => col.index)
+}
+
+const visibleColumnIndices = computed(() => {
+    if (selectedGroup.value === ALL_GROUP_KEY) {
+        return Array.from({ length: totalColumnCount.value }, (_, idx) => idx)
+    }
+
+    const base = baseColumnIndices.value
+    const groupColumns = getGroupColumnIndices(selectedGroup.value)
+
+    return Array.from(new Set([...base, ...groupColumns]))
+        .filter(index => index >= 0 && index < totalColumnCount.value)
+        .sort((a, b) => a - b)
+})
+
+const displayRows = computed(() => {
+    return sortedRows.value.map(row => visibleColumnIndices.value.map(index => row?.[index] || ''))
+})
+
+const isGroupMode = computed(() => selectedGroup.value !== ALL_GROUP_KEY)
+
+function parseSortableValue(value) {
+    const text = normalizeText(value)
+    if (!text) return { type: 'empty', value: '' }
+
+    const numericText = text.replace(/,/g, '').replace(/%/g, '')
+    if (/^-?\d+(\.\d+)?$/.test(numericText)) {
+        return { type: 'number', value: Number(numericText) }
+    }
+
+    return { type: 'string', value: text.toLowerCase() }
+}
+
+function compareCellValues(a, b) {
+    const parsedA = parseSortableValue(a)
+    const parsedB = parseSortableValue(b)
+
+    if (parsedA.type === 'empty' && parsedB.type === 'empty') return 0
+    if (parsedA.type === 'empty') return 1
+    if (parsedB.type === 'empty') return -1
+
+    if (parsedA.type === 'number' && parsedB.type === 'number') {
+        return parsedA.value - parsedB.value
+    }
+
+    return String(parsedA.value).localeCompare(String(parsedB.value), 'zh-Hans-CN', { numeric: true })
+}
+
+const sortedRows = computed(() => {
+    const { colPosition, direction } = sortState.value
+    if (colPosition === null || !direction) {
+        return normalizedRows.value
+    }
+
+    const sourceColumnIndex = visibleColumnIndices.value[colPosition]
+    if (sourceColumnIndex === undefined) {
+        return normalizedRows.value
+    }
+
+    return normalizedRows.value
+        .map((row, originIndex) => ({ row, originIndex }))
+        .sort((a, b) => {
+            const compareResult = compareCellValues(a.row[sourceColumnIndex], b.row[sourceColumnIndex])
+            if (compareResult !== 0) {
+                return direction === 'asc' ? compareResult : -compareResult
+            }
+            return a.originIndex - b.originIndex
+        })
+        .map(item => item.row)
+})
+
+function removeTitleHeaderRows(rows, totalCols) {
+    if (!Array.isArray(rows) || rows.length <= 1) return rows || []
+    const [firstRow, ...restRows] = rows
+    const firstCells = firstRow || []
+    if (firstCells.length !== 1) return rows
+
+    const onlyCell = firstCells[0]
+    const colspan = Number(onlyCell?.colspan) || 1
+    const text = normalizeText(onlyCell?.text)
+    const almostFullSpan = colspan >= Math.max(totalCols - 1, 1)
+    if (almostFullSpan && looksLikeReportTitle(text)) {
+        return restRows
+    }
+    return rows
+}
+
+const displayHeaderRows = computed(() => {
+    if (selectedGroup.value === ALL_GROUP_KEY) {
+        const rows = annotateHeaderCells(headerLayout.value)
+        return removeTitleHeaderRows(rows, totalColumnCount.value)
+    }
+    const projectedRows = buildProjectedHeaderLayout(headerGrid.value, visibleColumnIndices.value)
+    return removeTitleHeaderRows(projectedRows, visibleColumnIndices.value.length)
+})
+
+const hiddenColumnCount = computed(() => {
+    return Math.max(totalColumnCount.value - visibleColumnIndices.value.length, 0)
+})
+
+const hasTableData = computed(() => {
+    return headerLayout.value.length > 0 || tableRows.value.length > 0
+})
+
+watch(visibleColumnIndices, indices => {
+    if (sortState.value.colPosition === null) return
+    if (sortState.value.colPosition >= indices.length) {
+        sortState.value = { colPosition: null, direction: null }
+    }
+})
+
+function getHeaderCellClass(cell) {
+    const isSingleColumn = Number(cell?.colspan) === 1
+    if (!isSingleColumn) return ''
+
+    if (cell.colStart === 0) return 'sticky-region'
+    if (cell.colStart === 1) return 'sticky-company'
+    return ''
+}
+
+function isSortableHeaderCell(cell) {
+    return Number(cell?.colspan) === 1 && Number(cell?.colStart) >= 2
+}
+
+function getSortDirection(colPosition) {
+    if (sortState.value.colPosition !== colPosition) return ''
+    return sortState.value.direction || ''
+}
+
+function getSortSymbol(colPosition) {
+    const direction = getSortDirection(colPosition)
+    if (direction === 'asc') return '↑'
+    if (direction === 'desc') return '↓'
+    return '↕'
+}
+
+function toggleSort(colPosition) {
+    if (sortState.value.colPosition !== colPosition) {
+        sortState.value = { colPosition, direction: 'asc' }
+        return
+    }
+
+    if (sortState.value.direction === 'asc') {
+        sortState.value = { colPosition, direction: 'desc' }
+        return
+    }
+
+    if (sortState.value.direction === 'desc') {
+        sortState.value = { colPosition: null, direction: null }
+        return
+    }
+
+    sortState.value = { colPosition, direction: 'asc' }
+}
+
+function onHeaderClick(cell) {
+    if (!isSortableHeaderCell(cell)) return
+    toggleSort(cell.colStart)
+}
+
+function getHeaderCellStyle(rowIndex, cell) {
+    const baseZIndex = 160 - rowIndex
+    const style = { top: `${rowIndex * HEADER_ROW_HEIGHT}px`, zIndex: baseZIndex }
+    const isSingleColumn = Number(cell?.colspan) === 1
+
+    if (isSingleColumn) {
+        const width = getColumnWidthByPosition(cell.colStart)
+        if (width) {
+            style.width = `${width}px`
+            style.minWidth = `${width}px`
+            style.maxWidth = `${width}px`
+        }
+    }
+
+    if (isSingleColumn && cell.colStart === 0) {
+        style.zIndex = baseZIndex + 60
+        return style
+    }
+    if (isSingleColumn && cell.colStart === 1) {
+        style.zIndex = baseZIndex + 50
+        return style
+    }
+    return style
+}
+
+function getColumnWidthByPosition(colPosition) {
+    if (colPosition === 0) {
+        return isGroupMode.value ? GROUP_MODE_REGION_WIDTH : ALL_MODE_REGION_WIDTH
+    }
+    if (colPosition === 1) {
+        return isGroupMode.value ? GROUP_MODE_COMPANY_WIDTH : ALL_MODE_COMPANY_WIDTH
+    }
+    if (isGroupMode.value) {
+        return GROUP_MODE_METRIC_WIDTH
+    }
+    return null
+}
+
+function getBodyCellClass(colPosition) {
+    return {
+        'sticky-region': colPosition === 0,
+        'sticky-company': colPosition === 1,
+        'is-metric-col': colPosition >= 2
+    }
+}
+
+function getBodyCellStyle(colPosition) {
+    const width = getColumnWidthByPosition(colPosition)
+    if (!width) return null
+    return {
+        width: `${width}px`,
+        minWidth: `${width}px`,
+        maxWidth: `${width}px`
+    }
+}
+
+function setDensity(nextDensity) {
+    density.value = nextDensity
+}
+</script>
+
 <template>
-    <div class="page">
-        <div class="chart-card">
-            <div class="chart-header">
-                <div class="chart-title">
-                    <span class="chart-icon">📋</span>
-                    <h3>原始数据</h3>
+    <div class="page raw-data-page">
+        <section class="table-shell">
+            <div v-if="hasTableData" class="toolbar">
+                <div class="toolbar-stats">
+                    <span>总列 {{ totalColumnCount }}</span>
+                    <span>显示 {{ visibleColumnIndices.length }}</span>
+                    <span>隐藏 {{ hiddenColumnCount }}</span>
+                    <span>行数 {{ displayRows.length }}</span>
                 </div>
-                <div class="chart-subtitle">
-                    <div class="subtitle-indicator"></div>
-                    <span>滚动查看完整数据表</span>
+
+                <div class="group-tabs" role="group" aria-label="分组选择">
+                    <button :class="{ active: selectedGroup === ALL_GROUP_KEY }" @click="selectedGroup = ALL_GROUP_KEY">全部展示</button>
+                    <button
+                        v-for="group in insuranceGroups"
+                        :key="group"
+                        :class="{ active: selectedGroup === group }"
+                        @click="selectedGroup = group"
+                    >
+                        {{ group }}
+                    </button>
+                </div>
+
+                <div class="density-switch" role="group" aria-label="密度">
+                    <button :class="{ active: density === 'compact' }" @click="setDensity('compact')">紧凑</button>
+                    <button :class="{ active: density === 'comfortable' }" @click="setDensity('comfortable')">舒适</button>
                 </div>
             </div>
-            <div class="table-container" ref="tableContainer">
-                <div class="table-body" ref="tableBody" v-html="tableHtml"></div>
-                <!-- 遮挡表头右侧滚动条的盖板 -->
-                <div class="scrollbar-mask"></div>
+
+            <div class="table-container">
+                <div class="table-scroll">
+                    <table
+                        v-if="hasTableData"
+                        :class="[
+                            'raw-table',
+                            `density-${density}`,
+                            selectedGroup === ALL_GROUP_KEY ? 'mode-all' : 'mode-group'
+                        ]"
+                    >
+                        <thead>
+                            <tr v-for="(row, rowIndex) in displayHeaderRows" :key="`h-${rowIndex}`">
+                                <th
+                                    v-for="(cell, cellIndex) in row"
+                                    :key="`h-${rowIndex}-${cellIndex}`"
+                                    :rowspan="cell.rowspan || 1"
+                                    :colspan="cell.colspan || 1"
+                                    :style="getHeaderCellStyle(rowIndex, cell)"
+                                    :class="[
+                                        getHeaderCellClass(cell),
+                                        { sortable: isSortableHeaderCell(cell) },
+                                        `sort-${getSortDirection(cell.colStart)}`
+                                    ]"
+                                    @click="onHeaderClick(cell)"
+                                >
+                                    <span class="head-label">{{ cell.text || '—' }}</span>
+                                    <span v-if="isSortableHeaderCell(cell)" class="sort-indicator" :class="`sort-${getSortDirection(cell.colStart)}`">
+                                        {{ getSortSymbol(cell.colStart) }}
+                                    </span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(row, rowIndex) in displayRows" :key="`r-${rowIndex}`">
+                                <td
+                                    v-for="(cell, colIndex) in row"
+                                    :key="`r-${rowIndex}-${colIndex}`"
+                                    :class="getBodyCellClass(colIndex)"
+                                    :style="getBodyCellStyle(colIndex)"
+                                >
+                                    {{ cell }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div v-else class="empty-state">暂无原始表格数据</div>
+                </div>
             </div>
-        </div>
+        </section>
     </div>
 </template>
 
-<script setup>
-import { computed, ref, onMounted, watch, nextTick } from 'vue'
-import { state } from '../stores/dataStore'
-
-const tableContainer = ref(null)
-const tableBody = ref(null)
-
-// 移除不稳定的 JS 同步逻辑
-// 使用原生单表格 + CSS Sticky 保证绝对对齐
-
-// 解析并处理表格数据，合并为一个完整表格
-const tableHtml = computed(() => {
-    if (!state.rawHtml) return ''
-    
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(state.rawHtml, 'text/html')
-    const table = doc.querySelector('table')
-    
-    if (!table) return state.rawHtml
-    
-    const rows = Array.from(table.querySelectorAll('tr'))
-    if (rows.length < 2) return table.outerHTML
-    
-    // 找到包含"地区"单元格的行
-    let regionRowIndex = -1
-    let regionCell = null
-    
-    for (let i = 0; i < rows.length; i++) {
-        const cells = rows[i].querySelectorAll('td, th')
-        for (let j = 0; j < cells.length; j++) {
-            if (cells[j].textContent.trim() === '地区') {
-                regionRowIndex = i
-                regionCell = cells[j]
-                break
-            }
-        }
-        if (regionCell) break
-    }
-    
-    if (regionCell) {
-        const rowspan = parseInt(regionCell.getAttribute('rowspan') || '1')
-        regionCell.remove()
-        for (let i = regionRowIndex + rowspan; i < rows.length; i++) {
-            const firstCell = rows[i].querySelector('td, th')
-            if (firstCell) firstCell.remove()
-        }
-    }
-    
-    // 返回合并后的完整表格，并标记前三行为 thead
-    // 重新构建 HTML
-    const allRows = Array.from(table.querySelectorAll('tr'))
-    const headerHtml = allRows.slice(0, 3).map(r => r.outerHTML).join('')
-    const bodyHtml = allRows.slice(3).map(r => r.outerHTML).join('')
-    
-    return `<table>
-        <thead class="sticky-header">${headerHtml}</thead>
-        <tbody>${bodyHtml}</tbody>
-    </table>`
-})
-
-</script>
-
 <style scoped>
-.page {
+.raw-data-page {
+    min-height: 0;
+}
+
+.table-shell {
     height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    gap: clamp(12px, 1.5vw, 20px);
-    min-height: 0;
-}
-
-.chart-card {
-    background: #FFFFFF;
     border-radius: 16px;
-    padding: clamp(16px, 2vw, 24px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(229, 231, 235, 0.8);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    border: 1px solid var(--border-light);
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+}
+
+.toolbar-stats {
     display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-right: auto;
 }
 
-.chart-card:hover {
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+.toolbar-stats span {
+    font-size: var(--text-sm);
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1e3a8a;
 }
 
-.chart-header {
-    margin-bottom: clamp(12px, 1.5vw, 16px);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.chart-title {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.chart-icon {
-    font-size: 24px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    color: #4F46E5;
-}
-
-.chart-title h3 {
-    font-size: clamp(16px, 1.2vw, 20px);
-    font-weight: 800;
-    color: #111827;
-    margin: 0;
-    line-height: 1.3;
-    letter-spacing: -0.03em;
-}
-
-.chart-subtitle {
+.toolbar {
+    padding: 10px 14px;
+    border-bottom: 1px solid #e9edf4;
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    flex-wrap: wrap;
 }
 
-.subtitle-indicator {
-    width: 8px;
-    height: 8px;
-    background: linear-gradient(135deg, #4F46E5, #10B981);
-    border-radius: 50%;
-    flex-shrink: 0;
+.group-tabs,
+.density-switch {
+    display: inline-flex;
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    border-radius: 10px;
+    padding: 2px;
+    flex-wrap: wrap;
+    gap: 2px;
 }
 
-.chart-subtitle span {
-    font-size: 13px;
-    color: #6B7280;
-    font-weight: 400;
-    line-height: 1.4;
+.group-tabs button,
+.density-switch button {
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
-/* 移动端适配 */
-@media (max-width: 768px) {
-    .chart-card {
-        padding: 16px;
-        max-height: calc(100vh - 100px);
-    }
-
-    .chart-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
-    }
-
-    .chart-title {
-        margin-bottom: 4px;
-    }
-
-    .chart-title h3 {
-        font-size: 16px;
-    }
-
-    .chart-icon {
-        font-size: 20px;
-    }
-
-    .chart-subtitle span {
-        font-size: 12px;
-    }
+.group-tabs button.active,
+.density-switch button.active {
+    background: #fff;
+    color: #1e40af;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.14);
 }
 
-@media (max-width: 480px) {
-    .chart-card {
-        padding: 12px;
-    }
-
-    .chart-title h3 {
-        font-size: 14px;
-    }
-
-    .chart-icon {
-        font-size: 18px;
-    }
-
-    .chart-subtitle span {
-        font-size: 11px;
-    }
-}
-
-/* 表格容器 */
 .table-container {
     flex: 1;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    background: var(--bg-card);
-    overflow: hidden;
+    padding: 8px;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
-/* 数据区域 - 可滚动 */
-.table-body {
-    flex: 1;
-    overflow: auto;
+.table-scroll {
+    height: 100%;
     min-height: 0;
+    overflow: auto;
+    border: 1px solid #dbe3ed;
+    border-radius: 12px;
+    background: #fff;
 }
 
-.table-body :deep(table) {
-    width: 100%;
+.raw-table {
+    --region-col-width: 96px;
+    --company-col-width: 132px;
+    width: max-content;
+    min-width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: clamp(12px, 0.85vw, 14px);
-    table-layout: auto;
 }
 
-/* 粘性表头样式 */
-.table-body :deep(thead.sticky-header tr:nth-child(1) td),
-.table-body :deep(thead.sticky-header tr:nth-child(2) td),
-.table-body :deep(thead.sticky-header tr:nth-child(3) td) {
+.raw-table.mode-all {
+    --region-col-width: 96px;
+    --company-col-width: 132px;
+}
+
+.raw-table.mode-group {
+    --region-col-width: 88px;
+    --company-col-width: 118px;
+}
+
+.raw-table.density-compact {
+    --row-height: 30px;
+    --cell-font: 12px;
+    --cell-pad-x: 10px;
+}
+
+.raw-table.density-comfortable {
+    --row-height: 36px;
+    --cell-font: 13px;
+    --cell-pad-x: 12px;
+}
+
+.raw-table th,
+.raw-table td {
+    border-right: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    white-space: nowrap;
+    font-size: var(--cell-font);
+    padding: 0 var(--cell-pad-x);
+}
+
+.raw-table thead th {
     position: sticky;
-    z-index: 100;
-    background: #fff; /* 纯白背景遮挡下方内容 */
-    font-weight: 700;
-    color: var(--text-primary);
+    background: linear-gradient(180deg, #ffffff, #f6f9ff);
+    color: #0f172a;
     text-align: center;
-    border-right: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
-    height: 40px;
-    padding: 0 12px;
-    box-sizing: border-box;
-    white-space: nowrap;
+    font-weight: var(--weight-bold);
+    height: 38px;
+    z-index: 30;
+}
+
+.raw-table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.raw-table thead th .head-label {
+    pointer-events: none;
+}
+
+.sort-indicator {
+    margin-left: 6px;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    font-size: var(--text-xs);
+    color: #94a3b8;
     vertical-align: middle;
+    opacity: 0.35;
+    transition: opacity 0.15s ease, color 0.15s ease;
 }
 
-.table-body :deep(thead.sticky-header tr:nth-child(1) td) { top: 0; }
-.table-body :deep(thead.sticky-header tr:nth-child(2) td) { top: 40px; }
-.table-body :deep(thead.sticky-header tr:nth-child(3) td) { top: 80px; }
-
-/* 遮盖右侧滚动条在表头部分的盖板 */
-.scrollbar-mask {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 12px; /* 略大于滚动条宽度 */
-    height: 120px; /* 三行表头的高度 (40*3) */
-    background: #fff;
-    z-index: 101;
-    border-bottom: 1px solid var(--border-light);
+.raw-table thead th.sortable:hover .sort-indicator {
+    opacity: 0.75;
 }
 
-.table-body :deep(tbody td) {
-    padding: 12px;
-    border-right: 1px solid var(--border-light);
-    border-bottom: 1px solid var(--border-light);
-    white-space: nowrap;
-    vertical-align: middle;
-    box-sizing: border-box;
+.sort-indicator.sort-asc,
+.sort-indicator.sort-desc {
+    opacity: 1;
+    color: #1e40af;
+    font-weight: var(--weight-bold);
+}
+
+.raw-table tbody td {
+    height: var(--row-height);
+    color: #1e293b;
     background: #fff;
 }
 
-.table-body :deep(tbody tr:nth-child(odd) td) {
-    background: var(--bg-subtle);
+.raw-table tbody tr:nth-child(odd) td {
+    background: #fbfcff;
 }
 
-.table-body :deep(tbody tr:hover td) {
-    background: linear-gradient(90deg, rgba(148, 163, 184, 0.08), rgba(203, 213, 225, 0.12));
+.raw-table tbody tr:hover td {
+    background: linear-gradient(90deg, rgba(219, 234, 254, 0.42), rgba(239, 246, 255, 0.58));
 }
 
-/* 隐藏最后一行和最后一列的边框 */
-.table-body :deep(td:last-child) {
-    border-right: none;
+.raw-table td.is-metric-col {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
 }
 
-.table-body :deep(tr:last-child td) {
+.sticky-region,
+.sticky-company {
+    position: sticky;
+}
+
+.sticky-region {
+    left: 0;
+    min-width: var(--region-col-width);
+    max-width: var(--region-col-width);
+    z-index: 28;
+}
+
+.sticky-company {
+    left: var(--region-col-width);
+    min-width: var(--company-col-width);
+    max-width: var(--company-col-width);
+    z-index: 27;
+}
+
+.raw-table thead th.sticky-region,
+.raw-table thead th.sticky-company {
+    background: linear-gradient(180deg, #ffffff, #f6f9ff) !important;
+}
+
+.raw-table td.sticky-region,
+.raw-table td.sticky-company {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 18;
+    background: #fff !important;
+}
+
+.raw-table tbody tr:nth-child(odd) td.sticky-region,
+.raw-table tbody tr:nth-child(odd) td.sticky-company {
+    background: #fbfcff !important;
+}
+
+.raw-table tbody tr:hover td.sticky-region,
+.raw-table tbody tr:hover td.sticky-company {
+    background: linear-gradient(90deg, rgba(219, 234, 254, 0.42), rgba(239, 246, 255, 0.58)) !important;
+}
+
+.raw-table tr:last-child td {
     border-bottom: none;
 }
 
-/* 滚动条样式 */
-.table-body::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.raw-table th:last-child,
+.raw-table td:last-child {
+    border-right: none;
 }
 
-.table-body::-webkit-scrollbar-track {
-    background: var(--bg-subtle);
-    border-radius: 4px;
+.empty-state {
+    min-height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    font-size: var(--text-base);
 }
 
-.table-body::-webkit-scrollbar-thumb {
-    background: var(--border-default);
-    border-radius: 4px;
-}
+@media (max-width: 1024px) {
+    .toolbar {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
 
-.table-body::-webkit-scrollbar-thumb:hover {
-    background: var(--text-tertiary);
+    .table-container {
+        padding: 8px;
+    }
 }
 </style>

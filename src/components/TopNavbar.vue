@@ -140,7 +140,7 @@ function onNavbarClick(event) {
 }
 
 .user-btn {
-    font-weight: 500;
+    font-weight: var(--weight-medium);
     color: var(--text-secondary);
 }
 
@@ -149,7 +149,7 @@ function onNavbarClick(event) {
 }
 
 .nav-icon {
-    font-size: 16px;
+    font-size: var(--text-xl);
     margin-right: 4px;
 }
 
@@ -167,11 +167,11 @@ function onNavbarClick(event) {
     }
 
     .nav-title {
-        font-size: 16px !important;
+        font-size: var(--text-xl) !important;
     }
 
     .dataset-tag {
-        font-size: 11px;
+        font-size: var(--text-xs);
     }
 
     .nav-menu {
@@ -182,7 +182,7 @@ function onNavbarClick(event) {
     .nav-item {
         flex: 1;
         padding: 8px 12px !important;
-        font-size: 13px !important;
+        font-size: var(--text-md) !important;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -190,12 +190,12 @@ function onNavbarClick(event) {
     }
 
     .nav-icon {
-        font-size: 18px;
+        font-size: var(--text-2xl);
         margin-right: 0;
     }
 
     .nav-text {
-        font-size: 11px;
+        font-size: var(--text-xs);
         white-space: nowrap;
     }
 
@@ -215,16 +215,16 @@ function onNavbarClick(event) {
 
 @media (max-width: 480px) {
     .nav-title {
-        font-size: 14px !important;
+        font-size: var(--text-base) !important;
     }
 
     .nav-item {
         padding: 6px 8px !important;
-        font-size: 12px !important;
+        font-size: var(--text-sm) !important;
     }
 
     .nav-text {
-        font-size: 10px;
+        font-size: var(--text-2xs);
     }
 }
 </style>
