@@ -14,8 +14,10 @@
         
         <div class="chart-container">
             <VChart 
+                ref="chartRef"
                 class="chart"
                 :option="chartOption"
+                :update-options="{ notMerge: true }"
                 :autoresize="true"
                 :loading="loading"
             />
@@ -42,6 +44,7 @@ const props = defineProps({
 })
 
 const loading = ref(false)
+const chartRef = ref(null)
 
 const sortedData = computed(() => {
     return [...props.data].sort((a, b) => {
@@ -62,8 +65,9 @@ const chartOption = computed(() => {
     const isMobile = window.innerWidth <= 768
     
     // Generate colors based on focus companies
+    const focusList = focusCompanies.value
     const colors = data.map(d => {
-        if (focusCompanies.value.includes(d.name)) return '#EF4444'
+        if (focusList.includes(d.name)) return '#EF4444'
         return '#4F46E5'
     })
     
@@ -274,11 +278,9 @@ watch(() => props.data, (newData) => {
             loading.value = false
         }, 300)
     }
-}, { deep: true })
+}, { deep: true, flush: 'post' })
 
-watch(focusCompanies, () => {
-    // Recompute chart when focus companies change
-}, { deep: true })
+// 监听 focusCompanies 变化，chartOption 计算属性会自动重新计算颜色
 </script>
 
 <style scoped>

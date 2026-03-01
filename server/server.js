@@ -353,6 +353,44 @@ app.patch('/api/users/:username/password', (req, res) => {
   }
 })
 
+app.get('/api/users/:username/preferences', (req, res) => {
+  try {
+    const { username } = req.params
+    const users = getUsers()
+    const user = users.find(u => u.username === username)
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' })
+    }
+    res.json({
+      preferredDataSetId: user.preferredDataSetId || null
+    })
+  } catch (error) {
+    console.error('读取用户偏好失败:', error)
+    res.status(500).json({ error: '读取用户偏好失败' })
+  }
+})
+
+app.patch('/api/users/:username/preferences', (req, res) => {
+  try {
+    const { username } = req.params
+    const { preferredDataSetId } = req.body
+    const users = getUsers()
+    const user = users.find(u => u.username === username)
+    if (!user) {
+      return res.status(404).json({ error: '用户不存在' })
+    }
+    user.preferredDataSetId = preferredDataSetId || null
+    saveUsers(users)
+    res.json({
+      success: true,
+      preferredDataSetId: user.preferredDataSetId
+    })
+  } catch (error) {
+    console.error('更新用户偏好失败:', error)
+    res.status(500).json({ error: '更新用户偏好失败' })
+  }
+})
+
 app.post('/api/auth/login', (req, res) => {
   try {
     const { username, password } = req.body

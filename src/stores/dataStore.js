@@ -33,13 +33,16 @@ export function getPersistedCurrentDataSetId() {
 async function syncCurrentDataSetIdToServer(dataSetId) {
     if (!state.user?.username) return
     try {
-        await fetch(`${API_BASE_URL}/users/${encodeURIComponent(state.user.username)}/preferences`, {
+        const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(state.user.username)}/preferences`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ preferredDataSetId: dataSetId || null })
         })
+        if (!response.ok && response.status !== 404) {
+            throw new Error(`同步失败: ${response.status}`)
+        }
     } catch (error) {
         console.error('同步当前数据集到服务端失败:', error)
     }
@@ -49,6 +52,9 @@ export async function getServerPreferredDataSetId() {
     if (!state.user?.username) return null
     try {
         const response = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(state.user.username)}/preferences`)
+        if (response.status === 404) {
+            return null
+        }
         if (!response.ok) {
             throw new Error('获取服务端偏好失败')
         }
@@ -84,6 +90,23 @@ export const selectedCompany = ref(null)
 export const dataSets = ref([])
 export const currentDataSetId = ref(null)
 export const advancedAnalysisData = ref(null)
+
+export function normalizeCompanyName(name) {
+    return String(name || '').trim()
+}
+
+export function isFocusCompanyName(name) {
+    const normalized = normalizeCompanyName(name)
+    if (!normalized) return false
+    return focusCompanies.value.some(c => normalizeCompanyName(c) === normalized)
+}
+
+function normalizeFocusCompaniesList(list) {
+    const normalized = (list || [])
+        .map(normalizeCompanyName)
+        .filter(Boolean)
+    return [...new Set(normalized)]
+}
 
 // 认证方法
 export async function login(username, password) {
@@ -246,8 +269,9 @@ export const rankingData = computed(() => {
     const sortedByP = [...allData].sort((a, b) => b.p - a.p)
     let dataP = sortedByP.slice(0, 10)
     focusCompanies.value.forEach(fc => {
-        if (!dataP.find(d => d.name === fc)) {
-            const found = sortedByP.find(d => d.name === fc)
+        const normalized = normalizeCompanyName(fc)
+        if (!dataP.find(d => normalizeCompanyName(d.name) === normalized)) {
+            const found = sortedByP.find(d => normalizeCompanyName(d.name) === normalized)
             if (found) dataP.push(found)
         }
     })
@@ -256,8 +280,9 @@ export const rankingData = computed(() => {
     const sortedByG = [...allData].filter(d => d.p > 10).sort((a, b) => b.g - a.g)
     let dataG = sortedByG.slice(0, 10)
     focusCompanies.value.forEach(fc => {
-        if (!dataG.find(d => d.name === fc)) {
-            const found = allData.find(d => d.name === fc)
+        const normalized = normalizeCompanyName(fc)
+        if (!dataG.find(d => normalizeCompanyName(d.name) === normalized)) {
+            const found = allData.find(d => normalizeCompanyName(d.name) === normalized)
             if (found) dataG.push(found)
         }
     })
@@ -277,14 +302,17 @@ export const analysisList = computed(() => {
 
 // 方法：添加关注公司
 export function addFocusCompany(name) {
-    if (!focusCompanies.value.includes(name)) {
-        focusCompanies.value.push(name)
+    const normalized = normalizeCompanyName(name)
+    if (!normalized) return
+    if (!focusCompanies.value.some(c => normalizeCompanyName(c) === normalized)) {
+        focusCompanies.value.push(normalized)
     }
 }
 
 // 方法：移除关注公司
 export function removeFocusCompany(name) {
-    focusCompanies.value = focusCompanies.value.filter(c => c !== name)
+    const normalized = normalizeCompanyName(name)
+    focusCompanies.value = focusCompanies.value.filter(c => normalizeCompanyName(c) !== normalized)
 }
 
 // 方法：设置当前险种
@@ -344,7 +372,7 @@ export function saveDataToStorage(dataSetName = null) {
         const dataToSave = {
             dataSets: dataSets.value,
             currentDataSetId: currentDataSetId.value,
-            focusCompanies: focusCompanies.value,
+            focusCompanies: normalizeFocusCompaniesList(focusCompanies.value),
             currentIns: currentIns.value,
             currentTab: currentTab.value,
             selectedCompany: selectedCompany.value
@@ -376,7 +404,7 @@ export function addDataSet(dataSetName, insurances, companies, rawHtml, rawHeade
         const dataToSave = {
             dataSets: dataSets.value,
             currentDataSetId: currentDataSetId.value,
-            focusCompanies: focusCompanies.value,
+            focusCompanies: normalizeFocusCompaniesList(focusCompanies.value),
             currentIns: currentIns.value,
             currentTab: currentTab.value,
             selectedCompany: selectedCompany.value
@@ -398,7 +426,7 @@ export function loadDataFromStorage() {
             const data = JSON.parse(savedData)
             dataSets.value = data.dataSets || []
             currentDataSetId.value = data.currentDataSetId || null
-            focusCompanies.value = data.focusCompanies || []
+            focusCompanies.value = normalizeFocusCompaniesList(data.focusCompanies || [])
             currentTab.value = data.currentTab || 0
             selectedCompany.value = data.selectedCompany || null
             
@@ -467,7 +495,7 @@ export function deleteDataSet(dataSetId) {
             const dataToSave = {
                 dataSets: dataSets.value,
                 currentDataSetId: currentDataSetId.value,
-                focusCompanies: focusCompanies.value,
+                focusCompanies: normalizeFocusCompaniesList(focusCompanies.value),
                 currentIns: currentIns.value,
                 currentTab: currentTab.value,
                 selectedCompany: selectedCompany.value

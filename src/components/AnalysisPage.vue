@@ -3,23 +3,15 @@
         <div class="chart-card" style="height: 100%;">
             <div class="chart-header">
                 <div class="view-tabs">
-                    <div 
-                        :class="['view-tab', { active: activeView === 'detail' }]" 
-                        @click="activeView = 'detail'"
-                    >
+                    <div class="view-tab active">
                         结构透视
                     </div>
                 </div>
-                <div class="chart-title" v-if="activeView === 'detail'">
+                <div class="chart-title">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <template v-if="selectedCompany">
-                        <span class="company-name">{{ selectedCompany.split('-').pop() }}</span>
-                        <span class="title-separator">|</span>
-                        <span class="title-text">分险种透视</span>
-                    </template>
-                    <template v-else>
-                        非车险结构透视
-                    </template>
+                    <span class="company-name">{{ selectedCompany ? selectedCompany.split('-').pop() : '未选择公司' }}</span>
+                    <span class="title-separator">|</span>
+                    <span class="title-text">分险种透视</span>
                 </div>
                 <div class="chart-actions">
                     <div class="company-search" ref="searchContainer">
@@ -58,16 +50,14 @@
                         v-for="(item, idx) in analysisList" 
                         :key="item.fullName"
                         :class="[
-                            'list-item', 
-                            { 'focus-company': isFocusCompany(item.name) },
+                            'list-item',
                             { 'active': selectedCompany === item.fullName }
                         ]"
-                        :ref="el => { if (isFocusCompany(item.name)) focusItemRefs[idx] = el }"
                         @click="selectCompany(item.fullName)"
                     >
                         <div class="item-left">
                             <div class="rank">{{ idx + 1 }}</div>
-                            <div class="name" :style="isFocusCompany(item.name) ? 'color: var(--danger)' : ''">
+                            <div class="name">
                                 {{ item.name }}
                             </div>
                         </div>
@@ -85,6 +75,7 @@
                         <VChart 
                             class="detail-chart"
                             :option="chartOption"
+                            :update-options="{ notMerge: true }"
                             :autoresize="true"
                         />
                     </div>
@@ -102,7 +93,6 @@ import { useECharts, useNiceInterval } from '../composables/useECharts'
 import { formatGrowth, formatPremium, formatAxisValue } from '../utils/formatters'
 import { 
     analysisList, 
-    focusCompanies, 
     selectedCompany,
     setSelectedCompany,
     getCompanyDetail,
@@ -115,7 +105,6 @@ import {
 useECharts()
 
 const listContainer = ref(null)
-const focusItemRefs = ref({})
 
 // 使用组合式函数优化事件监听
 const isMobile = useWindowResize()
@@ -594,10 +583,6 @@ watch(currentDataSetId, (newId) => {
     if (newId) fetchAdvancedAnalysis(newId)
 })
 
-function isFocusCompany(name) {
-    return focusCompanies.value.includes(name)
-}
-
 function selectCompany(fullName) {
     setSelectedCompany(fullName)
 }
@@ -608,13 +593,6 @@ watch(analysisList, (list) => {
     }
 }, { immediate: true })
 
-watch(focusCompanies, async () => {
-    await nextTick()
-    const focusIdx = Object.keys(focusItemRefs.value)[0]
-    if (focusIdx && focusItemRefs.value[focusIdx]) {
-        focusItemRefs.value[focusIdx].scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
-}, { deep: true })
 </script>
 
 <style scoped>
@@ -636,7 +614,7 @@ watch(focusCompanies, async () => {
     font-size: var(--text-md);
     font-weight: var(--weight-semibold);
     color: #64748b;
-    cursor: pointer;
+    cursor: default;
     border-radius: 8px;
     transition: all 0.2s;
 }
@@ -1221,10 +1199,6 @@ watch(focusCompanies, async () => {
 
 .list-item:hover {
     background: #F3F4F6;
-}
-
-.list-item.focus-company {
-    background: #FEF2F2;
 }
 
 .list-item.active {
