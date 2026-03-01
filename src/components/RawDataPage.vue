@@ -4,14 +4,15 @@ import { state } from '../stores/dataStore'
 
 const HEADER_ROW_HEIGHT = 38
 const ALL_GROUP_KEY = '__all__'
-const ALL_MODE_REGION_WIDTH = 96
-const ALL_MODE_COMPANY_WIDTH = 132
-const GROUP_MODE_REGION_WIDTH = 88
-const GROUP_MODE_COMPANY_WIDTH = 118
+const ALL_MODE_REGION_WIDTH = 84
+const ALL_MODE_COMPANY_WIDTH = 116
+const GROUP_MODE_REGION_WIDTH = 76
+const GROUP_MODE_COMPANY_WIDTH = 104
 const GROUP_MODE_METRIC_WIDTH = 112
 
 const density = ref('compact')
 const selectedGroup = ref(ALL_GROUP_KEY)
+const companyKeyword = ref('')
 const sortState = ref({
     colPosition: null,
     direction: null
@@ -343,11 +344,27 @@ const visibleColumnIndices = computed(() => {
         .sort((a, b) => a - b)
 })
 
+const filteredRows = computed(() => {
+    const keyword = normalizeText(companyKeyword.value).toLowerCase()
+    if (!keyword) return normalizedRows.value
+
+    const companyIndex = companyColIndex.value
+    return normalizedRows.value.filter(row => {
+        const companyName = normalizeText(row?.[companyIndex]).toLowerCase()
+        return companyName.includes(keyword)
+    })
+})
+
 const displayRows = computed(() => {
     return sortedRows.value.map(row => visibleColumnIndices.value.map(index => row?.[index] || ''))
 })
 
 const isGroupMode = computed(() => selectedGroup.value !== ALL_GROUP_KEY)
+const fixedLeftWidth = computed(() => {
+    const regionWidth = isGroupMode.value ? GROUP_MODE_REGION_WIDTH : ALL_MODE_REGION_WIDTH
+    const companyWidth = isGroupMode.value ? GROUP_MODE_COMPANY_WIDTH : ALL_MODE_COMPANY_WIDTH
+    return regionWidth + companyWidth
+})
 
 function parseSortableValue(value) {
     const text = normalizeText(value)
@@ -379,15 +396,15 @@ function compareCellValues(a, b) {
 const sortedRows = computed(() => {
     const { colPosition, direction } = sortState.value
     if (colPosition === null || !direction) {
-        return normalizedRows.value
+        return filteredRows.value
     }
 
     const sourceColumnIndex = visibleColumnIndices.value[colPosition]
     if (sourceColumnIndex === undefined) {
-        return normalizedRows.value
+        return filteredRows.value
     }
 
-    return normalizedRows.value
+    return filteredRows.value
         .map((row, originIndex) => ({ row, originIndex }))
         .sort((a, b) => {
             const compareResult = compareCellValues(a.row[sourceColumnIndex], b.row[sourceColumnIndex])
@@ -547,17 +564,30 @@ function getBodyCellStyle(colPosition) {
 function setDensity(nextDensity) {
     density.value = nextDensity
 }
+
+function clearCompanyKeyword() {
+    companyKeyword.value = ''
+}
 </script>
 
 <template>
     <div class="page raw-data-page">
         <section class="table-shell">
             <div v-if="hasTableData" class="toolbar">
-                <div class="toolbar-stats">
-                    <span>总列 {{ totalColumnCount }}</span>
-                    <span>显示 {{ visibleColumnIndices.length }}</span>
-                    <span>隐藏 {{ hiddenColumnCount }}</span>
-                    <span>行数 {{ displayRows.length }}</span>
+                <div class="toolbar-search">
+                    <input
+                        v-model.trim="companyKeyword"
+                        type="text"
+                        placeholder="按公司名称搜索..."
+                        aria-label="按公司名称搜索"
+                    >
+                    <button
+                        v-if="companyKeyword"
+                        class="search-clear"
+                        @click="clearCompanyKeyword"
+                    >
+                        清空
+                    </button>
                 </div>
 
                 <div class="group-tabs" role="group" aria-label="分组选择">
@@ -579,7 +609,7 @@ function setDensity(nextDensity) {
             </div>
 
             <div class="table-container">
-                <div class="table-scroll">
+                <div class="table-scroll" :style="{ '--fixed-left-width': `${fixedLeftWidth}px` }">
                     <table
                         v-if="hasTableData"
                         :class="[
@@ -618,7 +648,7 @@ function setDensity(nextDensity) {
                                     :class="getBodyCellClass(colIndex)"
                                     :style="getBodyCellStyle(colIndex)"
                                 >
-                                    {{ cell }}
+                                    <span class="cell-text">{{ cell }}</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -647,22 +677,6 @@ function setDensity(nextDensity) {
     box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
 }
 
-.toolbar-stats {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-right: auto;
-}
-
-.toolbar-stats span {
-    font-size: var(--text-sm);
-    padding: 4px 10px;
-    border-radius: 999px;
-    border: 1px solid #dbeafe;
-    background: #eff6ff;
-    color: #1e3a8a;
-}
-
 .toolbar {
     padding: 10px 14px;
     border-bottom: 1px solid #e9edf4;
@@ -670,6 +684,42 @@ function setDensity(nextDensity) {
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
+}
+
+.toolbar-search {
+    margin-right: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: min(360px, 100%);
+}
+
+.toolbar-search input {
+    height: 32px;
+    border: 1px solid #dbe3ed;
+    border-radius: 10px;
+    padding: 0 12px;
+    font-size: var(--text-sm);
+    color: #0f172a;
+    background: #fff;
+    min-width: min(300px, 100%);
+}
+
+.toolbar-search input:focus {
+    outline: none;
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+.search-clear {
+    border: 1px solid #dbeafe;
+    background: #eff6ff;
+    color: #1e40af;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    border-radius: 8px;
+    padding: 5px 10px;
+    cursor: pointer;
 }
 
 .group-tabs,
@@ -713,14 +763,29 @@ function setDensity(nextDensity) {
     height: 100%;
     min-height: 0;
     overflow: auto;
+    position: relative;
     border: 1px solid #dbe3ed;
     border-radius: 12px;
     background: #fff;
 }
 
+.table-scroll::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: var(--fixed-left-width, 200px);
+    pointer-events: none;
+    z-index: 21;
+    background: #fff;
+    box-shadow: inset -1px 0 0 #dbe3ed;
+}
+
 .raw-table {
-    --region-col-width: 96px;
-    --company-col-width: 132px;
+    --region-col-width: 84px;
+    --company-col-width: 116px;
+    --fixed-left-width: calc(var(--region-col-width) + var(--company-col-width));
     width: max-content;
     min-width: 100%;
     border-collapse: separate;
@@ -728,13 +793,13 @@ function setDensity(nextDensity) {
 }
 
 .raw-table.mode-all {
-    --region-col-width: 96px;
-    --company-col-width: 132px;
+    --region-col-width: 84px;
+    --company-col-width: 116px;
 }
 
 .raw-table.mode-group {
-    --region-col-width: 88px;
-    --company-col-width: 118px;
+    --region-col-width: 76px;
+    --company-col-width: 104px;
 }
 
 .raw-table.density-compact {
@@ -820,6 +885,16 @@ function setDensity(nextDensity) {
     font-variant-numeric: tabular-nums;
 }
 
+.cell-text {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+}
+
 .sticky-region,
 .sticky-company {
     position: sticky;
@@ -846,10 +921,13 @@ function setDensity(nextDensity) {
 
 .raw-table td.sticky-region,
 .raw-table td.sticky-company {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    z-index: 18;
+    z-index: 22;
     background: #fff !important;
+}
+
+.raw-table td.sticky-region .cell-text,
+.raw-table td.sticky-company .cell-text {
+    background: inherit;
 }
 
 .raw-table tbody tr:nth-child(odd) td.sticky-region,
@@ -859,11 +937,7 @@ function setDensity(nextDensity) {
 
 .raw-table tbody tr:hover td.sticky-region,
 .raw-table tbody tr:hover td.sticky-company {
-    background: linear-gradient(90deg, rgba(219, 234, 254, 0.42), rgba(239, 246, 255, 0.58)) !important;
-}
-
-.raw-table tr:last-child td {
-    border-bottom: none;
+    background: #eaf3ff !important;
 }
 
 .raw-table th:last-child,
