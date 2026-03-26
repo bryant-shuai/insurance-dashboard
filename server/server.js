@@ -13,7 +13,7 @@ import {
   ensureCumulativeLabel,
   inferReportPeriod,
   normalizeReportPeriodInput
-} from '../src/utils/ranking.js'
+} from './utils/ranking.js'
 
 const require = createRequire(import.meta.url)
 const XLSX = require('xlsx')

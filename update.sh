@@ -11,8 +11,10 @@ REMOTE_HOST="8.134.128.222"
 REMOTE_USER="root"
 REMOTE_DIR="/home/admin/msq/dist"
 SERVER_DIR="/home/admin/msq/insurance-dashboardnew/insurance-dashboard"
-SSH_CMD="ssh"
-RSYNC_CMD="rsync -avz -e 'ssh'"
+SSH_PORT="${SSH_PORT:-22}"
+SSH_KEY_FILE="${SSH_KEY_FILE:-$HOME/.ssh/id_rsa}"
+SSH_BASE_CMD=(ssh -i "$SSH_KEY_FILE" -p "$SSH_PORT")
+RSYNC_SSH_CMD="ssh -i \"$SSH_KEY_FILE\" -p \"$SSH_PORT\""
 SERVER_EXCLUDES=(
   "--exclude" "node_modules"
   "--exclude" ".env"
@@ -28,12 +30,12 @@ npm run build
 
 # 上传文件到服务器
 echo "📤 上传到服务器..."
-eval ${RSYNC_CMD} --delete dist/ ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/dist/
-rsync -avz -e ssh "${SERVER_EXCLUDES[@]}" server/ "${REMOTE_USER}@${REMOTE_HOST}:${SERVER_DIR}/server/"
+rsync -avz -e "$RSYNC_SSH_CMD" --delete dist/ "${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/dist/"
+rsync -avz -e "$RSYNC_SSH_CMD" "${SERVER_EXCLUDES[@]}" server/ "${REMOTE_USER}@${REMOTE_HOST}:${SERVER_DIR}/server/"
 
 # 远程执行部署命令
 echo "🔧 在服务器上部署..."
-${SSH_CMD} ${REMOTE_USER}@${REMOTE_HOST} << 'REMOTE_SCRIPT'
+"${SSH_BASE_CMD[@]}" "${REMOTE_USER}@${REMOTE_HOST}" << 'REMOTE_SCRIPT'
     # 进入后端目录
     cd /home/admin/msq/insurance-dashboardnew/insurance-dashboard/server
     
