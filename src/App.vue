@@ -20,7 +20,7 @@
                 <div class="container" v-else>
                     <TopNavbar @switchData="onSwitchDataFromNav" />
                     <template v-if="!showDataManager">
-                        <ControlPanel />
+                        <ControlPanel v-if="currentTab !== 4" />
                         <OverviewPage v-show="currentTab === 0" />
                         <AnalysisPage v-show="currentTab === 1" />
                         <InsightPage v-show="currentTab === 2" />

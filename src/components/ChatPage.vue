@@ -7,44 +7,6 @@
             <span class="ambient-line line-right"></span>
         </div>
         <div class="chat-container">
-            <!-- Header -->
-            <div class="chat-header">
-                <div class="header-left">
-                    <div class="header-avatar">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="3"/>
-                            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
-                        </svg>
-                    </div>
-                    <div class="header-info">
-                        <span class="header-title">智能助手</span>
-                        <span class="header-desc">保险数据洞察与问答中枢</span>
-                        <span class="header-status">
-                            <span class="status-dot"></span>
-                            在线
-                        </span>
-                    </div>
-                </div>
-                <div class="header-right">
-                    <button
-                        v-if="lastFailedQuestion && !loading"
-                        class="retry-btn"
-                        @click="retryLastMessage"
-                        title="重试上一条失败消息"
-                    >
-                        重试
-                    </button>
-                    <button class="clear-btn" @click="clearMessages" :disabled="messages.length === 0" title="清空对话">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"/>
-                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                            <path d="M10 11v6M14 11v6"/>
-                            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-                        </svg>
-                        清空
-                    </button>
-                </div>
-            </div>
 
             <!-- Suggested Questions -->
             <div v-if="messages.length === 0" class="suggestions-bar">
@@ -274,8 +236,9 @@ const retryLastMessage = () => {
 
 <style scoped>
 .chat-page {
-    padding: 16px;
-    height: calc(100vh - 64px);
+    padding: 10px 8px 12px;
+    flex: 1;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -339,7 +302,7 @@ const retryLastMessage = () => {
 }
 
 .chat-container {
-    max-width: 980px;
+    max-width: 1400px;
     margin: 0 auto;
     width: 100%;
     height: 100%;
@@ -351,122 +314,6 @@ const retryLastMessage = () => {
     box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
     overflow: hidden;
     z-index: 1;
-}
-
-/* Header */
-.chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border-light);
-    background: linear-gradient(90deg, rgba(232, 237, 255, 0.7), rgba(240, 253, 250, 0.52));
-    backdrop-filter: blur(6px);
-    flex-shrink: 0;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.header-avatar {
-    width: 40px;
-    height: 40px;
-    background: linear-gradient(135deg, #dbe8ff, #e7f7f1);
-    color: #1d4ed8;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border: 1px solid #c7d2fe;
-}
-
-.header-info {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-}
-
-.header-title {
-    font-size: var(--text-lg);
-    font-weight: var(--weight-extrabold);
-    color: var(--text-primary);
-    letter-spacing: -0.015em;
-}
-
-.header-desc {
-    font-size: var(--text-xs);
-    color: #64748b;
-}
-
-.header-status {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: var(--text-xs);
-    color: #475569;
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    background: var(--success);
-    border-radius: 50%;
-    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
-}
-
-.header-right {
-    display: flex;
-    align-items: center;
-}
-
-.clear-btn {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 7px 11px;
-    border: 1px solid var(--border-light);
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.75);
-    color: #64748b;
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
-    cursor: pointer;
-    transition: var(--transition-fast);
-    font-family: var(--font-sans);
-}
-
-.retry-btn {
-    margin-right: 8px;
-    padding: 7px 11px;
-    border: 1px solid var(--primary-subtle);
-    border-radius: 10px;
-    background: linear-gradient(180deg, #eef4ff, #e8edff);
-    color: var(--primary);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    cursor: pointer;
-    transition: var(--transition-fast);
-    font-family: var(--font-sans);
-}
-
-.retry-btn:hover {
-    border-color: var(--primary);
-    background: #dfe9ff;
-}
-
-.clear-btn:hover:not(:disabled) {
-    border-color: var(--danger);
-    color: var(--danger);
-    background: var(--danger-bg);
-}
-
-.clear-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
 }
 
 /* Suggestions */
@@ -521,7 +368,7 @@ const retryLastMessage = () => {
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    padding: 18px 20px 12px;
+    padding: 20px 24px 14px;
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -646,7 +493,7 @@ const retryLastMessage = () => {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    max-width: 72%;
+    max-width: 82%;
 }
 
 /* Bubbles */
@@ -662,7 +509,7 @@ const retryLastMessage = () => {
     background: linear-gradient(145deg, #1e40af, #1d4ed8);
     color: #fff;
     border-bottom-right-radius: 4px;
-    max-width: 72%;
+    max-width: 82%;
     box-shadow: 0 8px 16px rgba(30, 64, 175, 0.24);
 }
 
@@ -750,7 +597,7 @@ const retryLastMessage = () => {
     line-height: var(--leading-normal);
     resize: none;
     min-height: 24px;
-    max-height: 120px;
+    max-height: 160px;
     overflow-y: auto;
     padding: 6px 0;
     box-sizing: border-box;
@@ -805,12 +652,7 @@ const retryLastMessage = () => {
 /* Responsive */
 @media (max-width: 768px) {
     .chat-page {
-        padding: 12px;
-        height: calc(100vh - 120px);
-    }
-
-    .chat-header {
-        padding: 13px 14px;
+        padding: 8px 0 10px;
     }
 
     .ambient-orb {
@@ -833,7 +675,7 @@ const retryLastMessage = () => {
 
     .user-bubble,
     .assistant-content {
-        max-width: 88%;
+        max-width: 92%;
     }
 
     .chat-input-area {
