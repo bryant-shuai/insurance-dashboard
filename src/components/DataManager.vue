@@ -30,6 +30,19 @@
                             <!-- Datasets List -->
                             <section class="content-section">
                                 <div class="dm-toolbar">
+                                    <div class="dm-period-picker">
+                                        <label class="dm-period-label">报表月份</label>
+                                        <n-date-picker
+                                            v-model:formatted-value="uploadReportMonth"
+                                            class="dm-period-date-picker"
+                                            type="month"
+                                            clearable
+                                            format="yyyy年M月"
+                                            value-format="yyyy-MM"
+                                            placeholder="选择报表月份"
+                                            :actions="['clear', 'confirm']"
+                                        />
+                                    </div>
                                     <n-button type="primary" size="small" @click="triggerUpload" class="dm-upload-btn">
                                         <template #icon>
                                             <n-icon><CloudUploadOutline /></n-icon>
@@ -73,6 +86,11 @@
                                                     </n-tag>
                                                 </div>
                                                 <div class="dm-dataset-meta">
+                                                    <span class="dm-meta-item">
+                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg>
+                                                        {{ dataset.reportPeriod || '未设置期次' }}
+                                                    </span>
+                                                    <span class="dm-meta-separator">·</span>
                                                     <span class="dm-meta-item">
                                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                                                         {{ formatDate(dataset.createdAt) }}
@@ -295,7 +313,7 @@
 import { ref, computed, nextTick, onMounted, h, watch } from 'vue'
 import { 
     NCard, NButton, NIcon, NText, NTag, NEmpty, NInput, NPopconfirm, useMessage, 
-    NTabs, NTabPane, NDataTable, NModal, NForm, NFormItem 
+    NTabs, NTabPane, NDataTable, NModal, NForm, NFormItem, NDatePicker
 } from 'naive-ui'
 import { 
     CloudUploadOutline, TrashOutline, CreateOutline, CheckmarkCircleOutline, 
@@ -305,9 +323,11 @@ import {
     dataSets, currentDataSetId, loadDataSet, uploadExcel, deleteDataSetFromServer, 
     renameDataSet, isAdmin, fetchUsers, deleteUser, register, updateUserPassword 
 } from '../stores/dataStore'
+import { normalizeReportPeriodInput } from '../utils/ranking'
 
 const message = useMessage()
 const fileInput = ref(null)
+const uploadReportMonth = ref(null)
 const editingId = ref(null)
 const editingName = ref('')
 const emit = defineEmits(['back'])
@@ -319,6 +339,7 @@ const props = defineProps({
 
 // Menu State
 const activeMenu = ref('datasets')
+const selectedUploadReportPeriod = computed(() => normalizeReportPeriodInput(uploadReportMonth.value))
 
 const menuItems = computed(() => {
     const items = [
@@ -491,6 +512,10 @@ async function handleChangePassword() {
 
 // ... (Existing Dataset Methods)
 function triggerUpload() {
+    if (!selectedUploadReportPeriod.value) {
+        message.error('请先选择报表月份')
+        return
+    }
     fileInput.value.click()
 }
 
@@ -499,7 +524,9 @@ async function handleFileChange(event) {
     if (!file) return
     
     try {
-        const dataset = await uploadExcel(file)
+        const dataset = await uploadExcel(file, {
+            reportPeriod: selectedUploadReportPeriod.value
+        })
         await loadDataSet(dataset.id)
         message.success('上传成功')
     } catch (error) {
@@ -657,8 +684,39 @@ function formatDate(isoStr) {
 .dm-user-toolbar {
     padding: 16px 20px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     flex-shrink: 0;
+}
+
+.dm-period-picker {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.dm-period-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.dm-period-date-picker {
+    width: 170px;
+}
+
+.dm-period-date-picker :deep(.n-input) {
+    --n-height: 30px;
+}
+
+.dm-period-date-picker :deep(.n-input__border),
+.dm-period-date-picker :deep(.n-input__state-border) {
+    border-radius: 8px;
 }
 
 .dm-upload-btn,

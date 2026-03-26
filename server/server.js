@@ -5,6 +5,15 @@ import { createRequire } from 'module'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import {
+  DEFAULT_RANKING_INSURANCE,
+  DEFAULT_RANKING_TARGET_COMPANY,
+  computeInsuranceRankingIndex,
+  computeCompanyRankingSnapshot,
+  ensureCumulativeLabel,
+  inferReportPeriod,
+  normalizeReportPeriodInput
+} from '../src/utils/ranking.js'
 
 const require = createRequire(import.meta.url)
 const XLSX = require('xlsx')
@@ -100,7 +109,21 @@ function getDatasets() {
   try {
     if (fs.existsSync(datasetsFile)) {
       const data = fs.readFileSync(datasetsFile, 'utf-8')
-      return JSON.parse(data)
+      const rawDatasets = JSON.parse(data)
+      let hasMetadataUpdates = false
+      const datasets = rawDatasets.map(dataset => {
+        const enrichedDataset = enrichDatasetMetadata(dataset)
+        if (JSON.stringify(enrichedDataset) !== JSON.stringify(dataset)) {
+          hasMetadataUpdates = true
+        }
+        return enrichedDataset
+      })
+
+      if (hasMetadataUpdates) {
+        saveDatasets(datasets)
+      }
+
+      return datasets
     }
     return []
   } catch (error) {
@@ -117,6 +140,55 @@ function saveDatasets(datasets) {
   } catch (error) {
     console.error('保存数据集失败:', error)
     return false
+  }
+}
+
+function enrichDatasetMetadata(dataset = {}) {
+  const reportPeriod = dataset.reportPeriod || inferReportPeriod(dataset)
+  const storedRankingIndex = dataset.rankingIndex || {}
+  const defaultInsuranceRankingIndex = storedRankingIndex[DEFAULT_RANKING_INSURANCE]
+  const rankingIndexMatches =
+    defaultInsuranceRankingIndex &&
+    String(defaultInsuranceRankingIndex.insurance || '') === DEFAULT_RANKING_INSURANCE &&
+    String(defaultInsuranceRankingIndex.reportPeriod || '') === reportPeriod
+
+  const rankingIndex = {
+    ...storedRankingIndex,
+    [DEFAULT_RANKING_INSURANCE]: rankingIndexMatches
+      ? {
+          ...defaultInsuranceRankingIndex,
+          reportPeriod: defaultInsuranceRankingIndex.reportPeriod || reportPeriod,
+          periodLabel: defaultInsuranceRankingIndex.periodLabel || ensureCumulativeLabel(defaultInsuranceRankingIndex.reportPeriod || reportPeriod)
+        }
+      : computeInsuranceRankingIndex(dataset, {
+          insurance: DEFAULT_RANKING_INSURANCE,
+          reportPeriod
+        })
+  }
+
+  const storedSnapshot = dataset.rankingSnapshot
+  const snapshotMatches =
+    storedSnapshot &&
+    storedSnapshot.companyName === DEFAULT_RANKING_TARGET_COMPANY &&
+    String(storedSnapshot.insurance || '') === DEFAULT_RANKING_INSURANCE
+
+  const rankingSnapshot = snapshotMatches
+    ? {
+        ...storedSnapshot,
+        reportPeriod: storedSnapshot.reportPeriod || reportPeriod,
+        periodLabel: storedSnapshot.periodLabel || ensureCumulativeLabel(storedSnapshot.reportPeriod || reportPeriod)
+      }
+    : computeCompanyRankingSnapshot(dataset, {
+        companyName: DEFAULT_RANKING_TARGET_COMPANY,
+        insurance: DEFAULT_RANKING_INSURANCE,
+        reportPeriod
+      })
+
+  return {
+    ...dataset,
+    reportPeriod,
+    rankingIndex,
+    rankingSnapshot
   }
 }
 
@@ -556,6 +628,11 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       return res.status(400).json({ error: '没有上传文件' })
     }
 
+    const reportPeriod = normalizeReportPeriodInput(req.body?.reportPeriod)
+    if (!reportPeriod) {
+      return res.status(400).json({ error: '请先选择报表月份' })
+    }
+
     const decodedOriginalName = Buffer.from(req.file.originalname, 'latin1').toString('utf8')
     console.log('上传的文件名:', decodedOriginalName)
     console.log('保存的文件名:', req.file.filename)
@@ -575,6 +652,14 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
     const fileName = decodedOriginalName.replace(/\.[^/.]+$/, '')
     const datasetId = Date.now().toString()
+    const datasets = getDatasets()
+    const existingDataset = datasets.find(dataset =>
+      normalizeReportPeriodInput(dataset.reportPeriod || inferReportPeriod(dataset)) === reportPeriod
+    )
+
+    if (existingDataset) {
+      return res.status(409).json({ error: `${reportPeriod}数据已存在，请先删除或替换后再上传` })
+    }
 
     const newDataset = {
       id: datasetId,
@@ -583,14 +668,15 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
       insurances,
       companies,
       rawHtml,
+      reportPeriod,
       createdAt: new Date().toISOString()
     }
 
-    const datasets = getDatasets()
-    datasets.push(newDataset)
+    const enrichedDataset = enrichDatasetMetadata(newDataset)
+    datasets.push(enrichedDataset)
     saveDatasets(datasets)
 
-    res.json(newDataset)
+    res.json(enrichedDataset)
   } catch (error) {
     console.error('上传文件失败:', error)
     res.status(500).json({ error: error.message || '上传文件失败' })

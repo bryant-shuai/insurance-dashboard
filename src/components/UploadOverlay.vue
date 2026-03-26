@@ -9,6 +9,23 @@
             </div>
         </div>
 
+        <div class="upload-period-card">
+            <label class="upload-period-label">报表月份</label>
+            <n-date-picker
+                v-model:formatted-value="reportPeriodMonth"
+                class="upload-period-picker"
+                type="month"
+                clearable
+                format="yyyy年M月"
+                value-format="yyyy-MM"
+                placeholder="选择报表月份"
+                :actions="['clear', 'confirm']"
+            />
+            <n-text depth="3" class="upload-period-tip">
+                上传时必填，系统按该月份保存累计数据
+            </n-text>
+        </div>
+
         <div class="upload-box" @click="triggerUpload">
             <n-upload action="#" :auto-upload="false" style="border: none; background: transparent; padding: 0;">
                 <n-upload-dragger style="border: none; background: transparent; padding: 0;">
@@ -41,20 +58,23 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { NText, NUploadDragger } from 'naive-ui'
-import { state, uploadExcel, loadDataSet, dataSets } from '../stores/dataStore'
+import { computed, ref } from 'vue'
+import { NDatePicker, NText, NUploadDragger } from 'naive-ui'
+import { state, uploadExcel, loadDataSet } from '../stores/dataStore'
+import { normalizeReportPeriodInput } from '../utils/ranking'
 
 const fileInput = ref(null)
 const isUploading = ref(false)
-
-watch(() => state.isDataLoaded, (val) => {
-    // 不需要额外的本地状态，直接使用 store 的状态
-})
+const reportPeriodMonth = ref(null)
+const selectedReportPeriod = computed(() => normalizeReportPeriodInput(reportPeriodMonth.value))
 
 const emit = defineEmits(['fileUploaded', 'closeDataManager'])
 
 function triggerUpload() {
+    if (!selectedReportPeriod.value) {
+        alert('请先选择报表月份')
+        return
+    }
     fileInput.value.click()
 }
 
@@ -65,13 +85,16 @@ async function handleFileChange(event) {
     isUploading.value = true
     try {
         emit('closeDataManager')
-        const dataset = await uploadExcel(file)
+        const dataset = await uploadExcel(file, {
+            reportPeriod: selectedReportPeriod.value
+        })
         await loadDataSet(dataset.id)
         emit('fileUploaded')
     } catch (error) {
         alert(error.message || '文件上传失败')
     } finally {
         isUploading.value = false
+        event.target.value = ''
     }
 }
 
@@ -79,6 +102,44 @@ defineExpose({ triggerUpload })
 </script>
 
 <style scoped>
+.upload-period-card {
+    position: absolute;
+    top: clamp(92px, 12vw, 156px);
+    width: min(420px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    backdrop-filter: blur(10px);
+}
+
+.upload-period-label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: #111827;
+}
+
+.upload-period-picker {
+    width: 100%;
+}
+
+.upload-period-picker :deep(.n-input) {
+    --n-height: 42px;
+}
+
+.upload-period-picker :deep(.n-input__border),
+.upload-period-picker :deep(.n-input__state-border) {
+    border-radius: 12px;
+}
+
+.upload-period-tip {
+    font-size: var(--text-xs);
+}
+
 .upload-header-wrap {
     position: absolute;
     top: clamp(16px, 3vw, 32px);

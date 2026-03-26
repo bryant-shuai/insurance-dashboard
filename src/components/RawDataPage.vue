@@ -1,6 +1,12 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, shallowRef, watch } from 'vue'
+import CompanyRankingFlowModal from './CompanyRankingFlowModal.vue'
 import { state } from '../stores/dataStore'
+import {
+    DEFAULT_RANKING_TARGET_COMPANY,
+    getCompanyShortName,
+    normalizeRankingText
+} from '../utils/ranking'
 
 const HEADER_ROW_HEIGHT = 38
 const ALL_GROUP_KEY = '__all__'
@@ -13,6 +19,8 @@ const GROUP_MODE_METRIC_WIDTH = 112
 const density = ref('compact')
 const selectedGroup = ref(ALL_GROUP_KEY)
 const companyKeyword = ref('')
+const showRankingFlow = shallowRef(false)
+const rankingFlowCompany = shallowRef('')
 const sortState = ref({
     colPosition: null,
     direction: null
@@ -21,6 +29,16 @@ const sortState = ref({
 function normalizeText(value) {
     if (value === undefined || value === null) return ''
     return String(value).trim()
+}
+
+function isSunshineCompany(value) {
+    const normalized = normalizeRankingText(value)
+    if (!normalized) return false
+
+    const target = normalizeRankingText(DEFAULT_RANKING_TARGET_COMPANY)
+    const shortName = normalizeRankingText(getCompanyShortName(normalized))
+
+    return normalized === target || shortName === target || normalized.includes(target)
 }
 
 function isMetricLabel(label) {
@@ -543,11 +561,12 @@ function getColumnWidthByPosition(colPosition) {
     return null
 }
 
-function getBodyCellClass(colPosition) {
+function getBodyCellClass(colPosition, cellValue) {
     return {
         'sticky-region': colPosition === 0,
         'sticky-company': colPosition === 1,
-        'is-metric-col': colPosition >= 2
+        'is-metric-col': colPosition >= 2,
+        'sunshine-company-cell': colPosition === 1 && isSunshineCompany(cellValue)
     }
 }
 
@@ -567,6 +586,14 @@ function setDensity(nextDensity) {
 
 function clearCompanyKeyword() {
     companyKeyword.value = ''
+}
+
+function openRankingFlow(companyName) {
+    const normalizedCompany = normalizeText(companyName)
+    if (!normalizedCompany) return
+
+    rankingFlowCompany.value = normalizedCompany
+    showRankingFlow.value = true
 }
 </script>
 
@@ -645,10 +672,32 @@ function clearCompanyKeyword() {
                                 <td
                                     v-for="(cell, colIndex) in row"
                                     :key="`r-${rowIndex}-${colIndex}`"
-                                    :class="getBodyCellClass(colIndex)"
+                                    :class="[
+                                        getBodyCellClass(colIndex, cell),
+                                        { 'clickable-company': colIndex === companyColIndex }
+                                    ]"
                                     :style="getBodyCellStyle(colIndex)"
                                 >
-                                    <span class="cell-text">{{ cell }}</span>
+                                    <button
+                                        v-if="colIndex === companyColIndex"
+                                        type="button"
+                                        :class="[
+                                            'company-link',
+                                            { 'company-link--sunshine': isSunshineCompany(cell) }
+                                        ]"
+                                        :title="`查看 ${cell || '该公司'} 的累计排名流转`"
+                                        @click="openRankingFlow(cell)"
+                                    >
+                                        <span
+                                            v-if="isSunshineCompany(cell)"
+                                            class="company-focus-chip"
+                                            aria-hidden="true"
+                                        >
+                                            阳
+                                        </span>
+                                        <span class="cell-text">{{ cell }}</span>
+                                    </button>
+                                    <span v-else class="cell-text">{{ cell }}</span>
                                 </td>
                             </tr>
                         </tbody>
@@ -657,6 +706,11 @@ function clearCompanyKeyword() {
                 </div>
             </div>
         </section>
+
+        <CompanyRankingFlowModal
+            v-model:show="showRankingFlow"
+            :company-name="rankingFlowCompany"
+        />
     </div>
 </template>
 
@@ -895,6 +949,56 @@ function clearCompanyKeyword() {
     z-index: 1;
 }
 
+.clickable-company {
+    padding: 0 !important;
+}
+
+.company-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    padding: 0 var(--cell-pad-x);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.company-link--sunshine .cell-text {
+    color: #9a3412;
+    font-weight: var(--weight-bold);
+}
+
+.company-focus-chip {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(217, 119, 6, 0.22);
+}
+
+.company-link:focus-visible {
+    outline: 2px solid rgba(245, 158, 11, 0.4);
+    outline-offset: -2px;
+    border-radius: 6px;
+}
+
+.company-link:hover .cell-text {
+    color: #b45309;
+    text-decoration: underline;
+}
+
 .sticky-region,
 .sticky-company {
     position: sticky;
@@ -912,6 +1016,12 @@ function clearCompanyKeyword() {
     min-width: var(--company-col-width);
     max-width: var(--company-col-width);
     z-index: 27;
+}
+
+.raw-table tbody td.sunshine-company-cell {
+    background:
+        linear-gradient(90deg, rgba(251, 191, 36, 0.12), rgba(255, 247, 237, 0.92)) !important;
+    box-shadow: inset 3px 0 0 rgba(245, 158, 11, 0.75);
 }
 
 .raw-table thead th.sticky-region,
@@ -935,9 +1045,19 @@ function clearCompanyKeyword() {
     background: #fbfcff !important;
 }
 
+.raw-table tbody tr:nth-child(odd) td.sunshine-company-cell {
+    background:
+        linear-gradient(90deg, rgba(251, 191, 36, 0.14), rgba(255, 247, 237, 0.96)) !important;
+}
+
 .raw-table tbody tr:hover td.sticky-region,
 .raw-table tbody tr:hover td.sticky-company {
     background: #eaf3ff !important;
+}
+
+.raw-table tbody tr:hover td.sunshine-company-cell {
+    background:
+        linear-gradient(90deg, rgba(245, 158, 11, 0.18), rgba(255, 237, 213, 0.98)) !important;
 }
 
 .raw-table th:last-child,

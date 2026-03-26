@@ -26,3 +26,4 @@ dist-ssr
 # Runtime data
 server/uploads/
 server/data/datasets.json
+server/.env

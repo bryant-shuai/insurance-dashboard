@@ -13,6 +13,14 @@ REMOTE_DIR="/home/admin/msq/dist"
 SERVER_DIR="/home/admin/msq/insurance-dashboardnew/insurance-dashboard"
 SSH_CMD="ssh"
 RSYNC_CMD="rsync -avz -e 'ssh'"
+SERVER_EXCLUDES=(
+  "--exclude" "node_modules"
+  "--exclude" ".env"
+  "--exclude" "data"
+  "--exclude" "uploads"
+  "--exclude" "*.log"
+  "--exclude" ".DS_Store"
+)
 
 # 本地构建
 echo "📦 构建前端..."
@@ -21,7 +29,7 @@ npm run build
 # 上传文件到服务器
 echo "📤 上传到服务器..."
 eval ${RSYNC_CMD} --delete dist/ ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/dist/
-eval ${RSYNC_CMD} --exclude 'node_modules' server/ ${REMOTE_USER}@${REMOTE_HOST}:${SERVER_DIR}/server/
+rsync -avz -e ssh "${SERVER_EXCLUDES[@]}" server/ "${REMOTE_USER}@${REMOTE_HOST}:${SERVER_DIR}/server/"
 
 # 远程执行部署命令
 echo "🔧 在服务器上部署..."

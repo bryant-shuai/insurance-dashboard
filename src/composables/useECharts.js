@@ -1,6 +1,6 @@
 import { use } from "echarts/core"
 import { CanvasRenderer } from "echarts/renderers"
-import { BarChart, TreemapChart } from "echarts/charts"
+import { BarChart, LineChart, TreemapChart } from "echarts/charts"
 import {
   TitleComponent,
   TooltipComponent,
@@ -18,6 +18,7 @@ export function useECharts() {
     use([
       CanvasRenderer,
       BarChart,
+      LineChart,
       TreemapChart,
       TitleComponent,
       TooltipComponent,

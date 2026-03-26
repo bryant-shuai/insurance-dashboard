@@ -547,10 +547,13 @@ export async function fetchDatasets() {
 }
 
 // API 方法：上传文件到服务器
-export async function uploadExcel(file) {
+export async function uploadExcel(file, options = {}) {
     try {
         const formData = new FormData()
         formData.append('file', file)
+        if (options.reportPeriod) {
+            formData.append('reportPeriod', options.reportPeriod)
+        }
         
         const response = await fetch(`${API_BASE_URL}/upload`, {
             method: 'POST',
